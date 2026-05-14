@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SCI Crop Planner & Living Root Index Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sci-earth: #3D2F1E;
+  --sci-clay: #A8551F;
+  --sci-leaf: #3F5C3A;
+  --sci-leaf-deep: #2B4028;
+  --sci-line: #DED3BB;
+  --sci-soft: #FBF8F1;
+  --sci-muted: #6B6458;
+  --sci-ink: #1C1A16;
+  --warn-bg: #FFF3D6;
+  --white: #fff;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: transparent;
+  color: var(--sci-ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.4;
+  font-size: 13px;
+}
+button, input, select, textarea { font: inherit; }
+body { overflow-x: hidden; }
+.screen { display: none; width: 100%; min-height: 100vh; }
+.screen.active { display: block; }
+.content, .content-wide { width: 100%; max-width: 1180px; margin: 0 auto; padding: 8px; }
+.content-wide { max-width: 1320px; }
+.home-content { width: 100%; max-width: 850px; margin: 0 auto; padding: 14px 8px; }
+.feature-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.feature-item { background: var(--white); border: 1px solid var(--sci-line); border-radius: 14px; padding: 12px; display: flex; gap: 9px; align-items: flex-start; }
+.fi-icon { width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center; background: var(--sci-soft); }
+.fi-head { font-weight: 850; color: var(--sci-earth); font-size: 13px; }
+.fi-sub { color: var(--sci-muted); font-size: 11px; margin-top: 2px; }
+.app-bar { position: sticky; top: 0; z-index: 20; background: rgba(251,248,241,.96); border-bottom: 1px solid var(--sci-line); display: flex; align-items: center; gap: 8px; padding: 7px 8px; min-height: 44px; }
+.app-bar-title { flex: 1; font-weight: 850; color: var(--sci-earth); letter-spacing: -.01em; }
+.back-btn, .app-bar-action { border: 1px solid var(--sci-line); background: #fff; color: var(--sci-earth); border-radius: 9px; padding: 6px 9px; font-weight: 800; cursor: pointer; }
+.app-bar-action { background: var(--sci-leaf-deep); color: #fff; border-color: var(--sci-leaf-deep); }
+.step-bar { display: flex; gap: 7px; padding: 7px 8px 0; max-width: 1180px; margin: 0 auto; }
+.step-item { flex: 1; display: flex; align-items: center; gap: 6px; color: var(--sci-muted); font-size: 11px; font-weight: 800; background: #fff; border: 1px solid var(--sci-line); border-radius: 999px; padding: 6px 8px; }
+.step-dot { width: 9px; height: 9px; border-radius: 999px; background: var(--sci-line); }
+.step-item.active { color: var(--sci-earth); border-color: var(--sci-clay); }
+.step-item.active .step-dot { background: var(--sci-clay); }
+.step-item.done { color: var(--sci-leaf-deep); }
+.step-item.done .step-dot { background: var(--sci-leaf-deep); }
+.section-head { margin: 6px 0 8px; }
+h2, h3, h4 { margin: 0; color: var(--sci-earth); font-weight: 850; letter-spacing: -.01em; }
+h2 { font-size: 16px; }
+h3 { font-size: 14px; }
+h4 { font-size: 13px; }
+.sub, .help { color: var(--sci-muted); font-size: 11px; margin-top: 2px; }
+.card, .crop-card, .crop-page-shell { background: var(--white); border: 1px solid var(--sci-line); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+.input-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.full { grid-column: span 2; }
+label, .label { color: var(--sci-muted); font-size: 9px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+input, select, textarea { width: 100%; min-height: 36px; border: 1px solid var(--sci-line); border-radius: 9px; background: #fff; color: var(--sci-ink); padding: 7px 9px; outline: none; }
+textarea { min-height: 54px; resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-shadow: 0 0 0 3px rgba(168,85,31,.12); }
+.btn, .btn-primary { border: 0; border-radius: 9px; padding: 7px 11px; color: #fff; background: var(--sci-leaf-deep); cursor: pointer; font-weight: 850; font-size: 12px; white-space: nowrap; }
+.btn-primary { width: 100%; min-height: 42px; font-size: 13px; }
+.btn.secondary { background: var(--sci-clay); }
+.btn.ghost { background: #fff; color: var(--sci-earth); border: 1px solid var(--sci-line); }
+.btn.danger { background: #8D3B1F; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.qa-box { border-left: 4px solid var(--sci-clay); background: var(--warn-bg); color: var(--sci-earth); padding: 8px 10px; border-radius: 9px; font-size: 12px; margin-bottom: 8px; }
+.hidden { display: none !important; }
+.crop-page-shell { padding: 10px; }
+.crop-page-top { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.crop-tabs { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+.crop-tab { border: 1px solid var(--sci-line); background: #fff; color: var(--sci-earth); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 850; white-space: nowrap; cursor: pointer; }
+.crop-tab.active { background: var(--sci-leaf-deep); border-color: var(--sci-leaf-deep); color: #fff; }
+.crop-page-controls { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+.crop-page-count { color: var(--sci-muted); font-size: 12px; font-weight: 850; }
+.crop-card { display: none; padding: 12px; }
+.crop-card.active-crop { display: block; }
+.crop-head { display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(110px,.45fr) minmax(105px,.35fr) auto; gap: 9px; align-items: end; padding: 10px; margin: -12px -12px 9px; background: var(--sci-soft); border-bottom: 1px solid var(--sci-line); border-radius: 14px 14px 0 0; }
+.crop-stats { display: none; }
+.stat { background: #FDFBF7; border: 1px solid var(--sci-line); border-radius: 8px; padding: 7px 8px; }
+.stat .value { color: var(--sci-leaf-deep); font-size: 15px; font-weight: 900; letter-spacing: -.03em; }
+.optional-bar { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; padding: 8px; border: 1px dashed var(--sci-line); background: #FDFBF7; border-radius: 11px; margin-bottom: 8px; }
+.optional-add-actions { padding-top: 8px; margin-top: 2px; border-top: 1px solid #EFE7D7; }
+.optional-add-actions .btn { flex: 1 1 240px; }
+.crop-hidden-metrics { display:none !important; }
+.optional-bar .help { margin: 0; flex: 1 1 220px; }
+.plan-entry { border: 1px solid #EFE7D7; border-radius: 12px; overflow: hidden; margin: 8px 0; background: #fff; }
+.entry-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 9px; background: #F4EBD9; border-bottom: 1px solid var(--sci-line); }
+.entry-title { font-weight: 900; color: var(--sci-earth); }
+.entry-sub { color: var(--sci-muted); font-size: 10.5px; margin-top: 1px; }
+.entry-summary { display: none; justify-content: space-between; gap: 8px; align-items: center; padding: 8px 9px; background: #fff; }
+.entry-summary-title { font-weight: 900; color: var(--sci-earth); }
+.entry-summary-sub { color: var(--sci-muted); font-size: 10.5px; }
+.entry-body { padding: 10px; }
+.entry-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.entry-grid .wide { grid-column: span 2; }
+.entry-grid .full { grid-column: 1 / -1; }
+.plan-entry.collapsed .entry-head, .plan-entry.collapsed .entry-body { display: none; }
+.plan-entry.collapsed .entry-summary { display: flex; }
+.lri-meter { height: 9px; width: 100%; background: #EEE4D3; border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.lri-fill { height: 100%; width: 0%; background: var(--sci-leaf-deep); border-radius: 999px; transition: width .2s ease; }
+.summary-report-wrap { display: flex; flex-direction: column; gap: 9px; }
+.summary-hero { background: var(--sci-leaf-deep); color: #fff; border-radius: 16px; padding: 14px; }
+.hero-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; opacity: .82; font-weight: 850; }
+.hero-val { font-size: 32px; line-height: 1; font-weight: 900; letter-spacing: -.05em; margin-top: 3px; }
+.hero-sub { font-size: 12px; opacity: .9; margin-top: 5px; }
+.summary-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.summary-metric, .crop-summary-card { background: #fff; border: 1px solid var(--sci-line); border-radius: 14px; padding: 10px; }
+.summary-metric .m-val { color: var(--sci-earth); font-size: 20px; font-weight: 900; letter-spacing: -.04em; }
+.summary-metric .m-lbl { color: var(--sci-muted); margin-top: 3px; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .08em; }
+.summary-section-title { margin: 4px 0 0; }
+.crop-summary-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 7px; }
+.csn { font-weight: 900; color: var(--sci-earth); }
+.csa { color: var(--sci-muted); font-weight: 800; font-size: 12px; }
+.crop-summary-body { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.cs-stat { background: #FDFBF7; border: 1px solid var(--sci-line); border-radius: 10px; padding: 8px; }
+.csv { color: var(--sci-leaf-deep); font-size: 16px; font-weight: 900; }
+.csl { color: var(--sci-muted); margin-top: 4px; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .07em; }
+.summary-table-wrap { overflow-x: auto; margin-top: 8px; }
+.summary-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.summary-table th, .summary-table td { border-bottom: 1px solid #EFE7D7; text-align: left; padding: 7px 6px; vertical-align: top; }
+.summary-table th { color: var(--sci-muted); font-size: 8px; text-transform: uppercase; letter-spacing: .08em; }
+.summary-empty { color: var(--sci-muted); font-size: 12px; padding: 8px; background: #FDFBF7; border-radius: 10px; }
+.summary-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.interpret { color: var(--sci-earth); font-weight: 750; }
+@media (max-width: 900px) {
+  .feature-list, .input-grid, .entry-grid, .crop-stats, .summary-metrics, .crop-summary-body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crop-head { grid-template-columns: 1fr 1fr; }
+  .field.full, .entry-grid .wide { grid-column: 1 / -1; }
+}
+@media (max-width: 620px) {
+  html, body { font-size: 12px; }
+  .content, .content-wide { padding: 6px; }
+  .feature-list, .input-grid, .entry-grid, .crop-stats, .summary-metrics, .crop-summary-body { grid-template-columns: 1fr; gap: 6px; }
+  .feature-item { padding: 10px; }
+  .crop-page-top { grid-template-columns: 1fr; }
+  .crop-page-controls { justify-content: space-between; }
+  .crop-head { grid-template-columns: 1fr; }
+  .entry-head { align-items: flex-start; }
+  .btn, .back-btn, .app-bar-action { padding: 6px 8px; font-size: 11px; }
+  .hero-val { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="screen active" id="screen-home">
+  <div class="home-content">
+    <div class="feature-list">
+      <div class="feature-item"><div class="fi-icon">🏡</div><div class="fi-text"><div class="fi-head">Farm Setup</div><div class="fi-sub">Name, total acres, crop count, and preparer</div></div></div>
+      <div class="feature-item"><div class="fi-icon">🌱</div><div class="fi-text"><div class="fi-head">Crop Planning</div><div class="fi-sub">Plan cash crops and optional cover crops</div></div></div>
+      <div class="feature-item"><div class="fi-icon">📈</div><div class="fi-text"><div class="fi-head">Living Root Index</div><div class="fi-sub">Days with living roots divided by 365</div></div></div>
+      <div class="feature-item"><div class="fi-icon">📥</div><div class="fi-text"><div class="fi-head">Export Crop Plan CSV</div><div class="fi-sub">Download a clean crop plan with LRI</div></div></div>
+    </div>
+    <button class="btn-primary" onclick="goTo('setup')">Get Started →</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-setup">
+  <div class="app-bar">
+    <button class="back-btn" type="button" onclick="goTo('home')">←</button>
+    <span class="app-bar-title">Farm Setup</span>
+  </div>
+  <div class="step-bar">
+    <div class="step-item active"><div class="step-dot"></div><span>Setup</span></div>
+    <div class="step-item"><div class="step-dot"></div><span>Crops</span></div>
+    <div class="step-item"><div class="step-dot"></div><span>Summary</span></div>
+  </div>
+  <div class="content">
+    <div class="section-head">
+      <h2>Farm details</h2>
+      <div class="sub">Retain the basic farm setup details, then create one page per crop.</div>
+    </div>
+    <div id="setupQa" class="qa-box hidden"></div>
+    <section class="card">
+      <div class="input-grid">
+        <div class="field full"><label for="farmName">Farm Name</label><input id="farmName" placeholder="Example: ABC Farm" /></div>
+        <div class="field"><label for="totalAcres">Total Acres</label><input id="totalAcres" type="number" min="0" step="0.01" placeholder="0" inputmode="decimal" /></div>
+        <div class="field"><label for="cropCount">Number of Crops</label><input id="cropCount" type="number" min="1" max="10" step="1" placeholder="" inputmode="numeric" /></div>
+        <div class="field"><label for="planningYear">Planning Year</label><input id="planningYear" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
+        <div class="field"><label for="preparedBy">Prepared By</label><input id="preparedBy" placeholder="Optional" /></div>
+      </div>
+    </section>
+    <button class="btn-primary" type="button" onclick="goToCrops()">Continue to Crops →</button>
+  </div>
+</div>
+
+<div class="screen" id="screen-crops">
+  <div class="app-bar">
+    <button class="back-btn" type="button" onclick="goTo('setup')">←</button>
+    <span class="app-bar-title" id="cropsBarTitle">Crops</span>
+    <button class="app-bar-action" type="button" onclick="goToSummary()">Summary →</button>
+  </div>
+  <div class="step-bar">
+    <div class="step-item done"><div class="step-dot"></div><span>Setup</span></div>
+    <div class="step-item active"><div class="step-dot"></div><span>Crops</span></div>
+    <div class="step-item"><div class="step-dot"></div><span>Summary</span></div>
+  </div>
+  <div class="content-wide">
+    <div id="acreWarning" class="qa-box hidden"></div>
+    <div id="cropQa" class="qa-box hidden"></div>
+    <section class="crop-page-shell">
+      <div class="crop-page-top">
+        <div class="crop-tabs" id="cropTabs" aria-label="Crop pages"></div>
+        <div class="crop-page-controls">
+          <button class="btn ghost" id="prevCropBtn" type="button">Previous</button>
+          <span class="crop-page-count" id="cropPageCount">Crop 1 of 1</span>
+          <button class="btn ghost" id="nextCropBtn" type="button">Next</button>
+        </div>
+      </div>
+      <main id="crops"></main>
+    </section>
+  </div>
+</div>
+
+<div class="screen" id="screen-summary">
+  <div class="app-bar">
+    <button class="back-btn" type="button" onclick="goTo('crops')">←</button>
+    <span class="app-bar-title">Summary Report</span>
+    <button class="app-bar-action" id="exportCsvTopBtn" type="button">Export Crop Plan CSV</button>
+  </div>
+  <div class="step-bar">
+    <div class="step-item done"><div class="step-dot"></div><span>Setup</span></div>
+    <div class="step-item done"><div class="step-dot"></div><span>Crops</span></div>
+    <div class="step-item active"><div class="step-dot"></div><span>Summary</span></div>
+  </div>
+  <div class="content">
+    <div id="summaryQa" class="qa-box hidden"></div>
+    <div id="summaryContent" class="summary-report-wrap"></div>
+    <div class="summary-actions">
+      <button class="btn ghost" type="button" onclick="goTo('crops')">← Edit Crops</button>
+      <button class="btn secondary" id="exportCsvBtn" type="button">Export Crop Plan CSV</button>
+    </div>
+    <div class="hidden" id="sumCropAcres">0.00</div>
+    <div class="hidden" id="remainingAcres">0.00</div>
+    <div class="hidden" id="farmAvgLri">0.00</div>
+    <div class="hidden" id="farmWeightedLri">0.00</div>
+  </div>
+</div>
+
+<template id="cropTemplate">
+  <section class="crop-card" data-crop-id="">
+    <div class="crop-head">
+      <div class="field"><label>Crop Page Name</label><input class="crop-name" placeholder="Corn, soybeans, wheat..." /></div>
+      <div class="field"><label>Crop Acres</label><input class="crop-acres" type="number" min="0" step="0.01" placeholder="0" /></div>
+      <div class="field"><label>Crop Year</label><input class="crop-year" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
+      <button class="btn danger remove-crop" type="button">Remove Crop</button>
+    </div>
+    <div class="crop-hidden-metrics" aria-hidden="true">
+      <span class="crop-lri-total">0.000</span>
+      <span class="crop-root-days">0</span>
+      <span class="crop-entries">1</span>
+      <span class="crop-interpret">—</span>
+      <span class="crop-lri-fill"></span>
+    </div>
+    <div class="optional-bar optional-add-actions">
+      <div class="help">Cash crop is always included. Add a pre-season or post-harvest cover crop only when needed. Opening one section collapses the previous entry to save space.</div>
+      <button class="btn ghost add-pre" type="button">+ Add Pre-Season Cover Crop</button>
+      <button class="btn ghost add-post" type="button">+ Add Post-Harvest Cover Crop</button>
+    </div>
+    <div class="entries"></div>
+  </section>
+</template>
+
+<template id="entryTemplate">
+  <section class="plan-entry" data-entry-type="cash">
+    <div class="entry-summary">
+      <div><div class="entry-summary-title">New Crop Window</div><div class="entry-summary-sub">Tap edit to open details</div></div>
+      <button class="btn ghost edit-entry" type="button">Edit</button>
+    </div>
+    <div class="entry-head">
+      <div><div class="entry-title">Crop Window</div><div class="entry-sub">Living Root Index = days between planting and harvest/termination ÷ 365.</div></div>
+      <button class="btn ghost remove-entry" type="button">Remove</button>
+    </div>
+    <div class="entry-body">
+      <div class="entry-grid">
+        <div class="field"><label>Planting Year</label><input class="planting-year" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
+        <div class="field wide"><label>Crop / Cover Crop</label><input class="entry-crop" placeholder="Corn, rye, radish..." /></div>
+        <div class="field"><label>Variety</label><input class="variety" placeholder="Optional" /></div>
+        <div class="field"><label>Seeding Rate lb/ac</label><input class="seeding-rate" type="number" min="0" step="0.01" placeholder="0" /></div>
+        <div class="field"><label>Planting Date</label><input class="planting-date" type="date" /></div>
+        <div class="field"><label>Harvest / Termination Date</label><input class="harvest-date" type="date" /></div>
+        <div class="field"><label>Termination Style</label><select class="termination-style"><option value="">Select if cover crop</option><option>Herbicide</option><option>Frost Kill</option><option>Winter Kill</option><option>Roller Crimp</option><option>Tillage</option><option>Harvest</option><option>Grazing</option><option>Other</option></select></div>
+        <div class="field"><label>LRI</label><input class="entry-lri" readonly value="0.00" /></div>
+        <div class="field full"><label>Notes</label><textarea class="notes" placeholder="Optional notes"></textarea></div>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script>
+const MAX_CROPS = 10;
+let cropCounter = 0;
+let activeCropIndex = 0;
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const num = v => Number.isFinite(parseFloat(v)) ? parseFloat(v) : 0;
+const fmt = (n, d = 2) => Number.isFinite(n) ? n.toFixed(d) : (0).toFixed(d);
+const todayYear = new Date().getFullYear();
+
+function getCropCards() { return $$('.crop-card'); }
+function showBox(id, message) { const box = $(id); if (!box) return; box.textContent = message; box.classList.toggle('hidden', !message); }
+function showSetupQA(message) { showBox('#setupQa', message); }
+function showCropQA(message) { showBox('#cropQa', message); }
+function showSummaryQA(message) { showBox('#summaryQa', message); }
+function htmlEscape(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+function csvEscape(value) { const str = String(value ?? ''); return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str; }
+
+function postHeight() {
+  const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+  try { parent.postMessage({ type: 'sci-tool-height', height: h }, '*'); } catch(e) {}
+}
+
+function daysBetween(start, end) {
+  if (!start || !end) return 0;
+  const s = new Date(start + 'T00:00:00');
+  const e = new Date(end + 'T00:00:00');
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return 0;
+  return Math.round((e - s) / 86400000);
+}
+function calcLri(start, end) { return daysBetween(start, end) / 365; }
+function interpretLri(lri) {
+  if (lri <= 0) return '—';
+  if (lri < 0.25) return 'Short-duration cover';
+  if (lri < 0.50) return 'Moderate-duration cover';
+  if (lri < 0.75) return 'Strong living-root window';
+  return 'Near-continuous living roots';
+}
+function interpretLong(lri) {
+  if (lri <= 0) return 'No living-root window entered yet.';
+  if (lri < 0.25) return 'Short-duration cover; roots active less than 3 months. Good for quick erosion control but limited soil-health benefit.';
+  if (lri < 0.50) return 'Moderate-duration cover or rotation phase; roots active about 3–6 months. Noticeable improvement in soil cover and structure.';
+  if (lri < 0.75) return 'Strong cover-crop or long-season crop window; roots active about 6–9 months. Good for organic-matter building and water holding.';
+  return 'Near-continuous or multi-species cover-crop system; roots active 9+ months. Very high living-root time.';
+}
+function entryStarted(entry) {
+  return ['.entry-crop','.variety','.seeding-rate','.planting-date','.harvest-date','.termination-style','.notes'].some(sel => ($(sel, entry)?.value || '').trim());
+}
+function entryComplete(entry) {
+  const type = entry.dataset.entryType;
+  const crop = $('.entry-crop', entry).value.trim();
+  const start = $('.planting-date', entry).value;
+  const end = $('.harvest-date', entry).value;
+  if (type === 'cash') return crop && start && end && daysBetween(start, end) >= 0;
+  if (!entryStarted(entry)) return false;
+  return crop && start && end && daysBetween(start, end) >= 0;
+}
+function entryMissingMessage(entry) {
+  const missing = [];
+  if (!$('.entry-crop', entry).value.trim()) missing.push('Crop/Cover Crop');
+  if (!$('.planting-date', entry).value) missing.push('Planting Date');
+  if (!$('.harvest-date', entry).value) missing.push('Harvest/Termination Date');
+  if ($('.planting-date', entry).value && $('.harvest-date', entry).value && new Date($('.harvest-date', entry).value) < new Date($('.planting-date', entry).value)) missing.push('Harvest/Termination must be after Planting Date');
+  return missing.join(', ');
+}
+function labelForType(type) {
+  if (type === 'pre') return 'Pre-Season Cover Crop (Optional)';
+  if (type === 'post') return 'Post Harvest Cover Crop (Optional)';
+  return 'Cash Crop';
+}
+function createEntry(type = 'cash') {
+  const entry = $('#entryTemplate').content.firstElementChild.cloneNode(true);
+  entry.dataset.entryType = type;
+  $('.entry-title', entry).textContent = labelForType(type);
+  $('.remove-entry', entry).style.display = type === 'cash' ? 'none' : '';
+  $('.termination-style', entry).disabled = type === 'cash';
+  if (type === 'cash') $('.termination-style', entry).value = '';
+  const year = $('#planningYear').value || todayYear;
+  $('.planting-year', entry).value = year;
+  $('.edit-entry', entry).addEventListener('click', ev => { ev.stopPropagation(); openEntry(entry); });
+  $('.entry-summary', entry).addEventListener('click', ev => { if (ev.target.closest('button')) return; openEntry(entry); });
+  $('.remove-entry', entry).addEventListener('click', () => { entry.remove(); calculateAll(); postHeight(); });
+  entry.addEventListener('input', () => { refreshEntry(entry); calculateAll(); });
+  entry.addEventListener('change', () => { refreshEntry(entry); calculateAll(); collapseCompletedEntries(entry.closest('.crop-card')); });
+  refreshEntry(entry);
+  return entry;
+}
+function refreshEntry(entry) {
+  const crop = $('.entry-crop', entry).value.trim() || labelForType(entry.dataset.entryType);
+  const start = $('.planting-date', entry).value;
+  const end = $('.harvest-date', entry).value;
+  const days = daysBetween(start, end);
+  const lri = calcLri(start, end);
+  $('.entry-lri', entry).value = fmt(lri, 3);
+  $('.entry-summary-title', entry).textContent = crop;
+  $('.entry-summary-sub', entry).textContent = `${labelForType(entry.dataset.entryType)} · ${start || 'No start date'} to ${end || 'No end date'} · ${days} days · LRI ${fmt(lri, 3)}`;
+}
+function openEntry(entry) {
+  const crop = entry.closest('.crop-card');
+  if (crop) {
+    $$('.plan-entry', crop).forEach(other => {
+      if (other !== entry) {
+        refreshEntry(other);
+        other.classList.add('collapsed');
+      }
+    });
+  }
+  entry.classList.remove('collapsed');
+  refreshEntry(entry);
+  setTimeout(() => entry.querySelector('input, select, textarea')?.focus(), 20);
+  setTimeout(postHeight, 40);
+}
+function collapseCompletedEntries(crop) { $$('.plan-entry', crop).forEach(entry => { refreshEntry(entry); if (entryComplete(entry)) entry.classList.add('collapsed'); }); }
+function ensureEntry(crop, type) {
+  let entry = $(`.plan-entry[data-entry-type="${type}"]`, crop);
+  if (!entry) {
+    entry = createEntry(type);
+    const entries = $('.entries', crop);
+    if (type === 'pre') entries.insertBefore(entry, entries.firstChild);
+    else entries.appendChild(entry);
+  }
+  openEntry(entry);
+  calculateAll();
+  postHeight();
+}
+
+function validateSetup() {
+  const farmName = $('#farmName').value.trim();
+  const totalAcres = num($('#totalAcres').value);
+  const cropCount = desiredCropCount(false);
+  if (!farmName) return { ok:false, message:'Enter a farm name before continuing.', el:$('#farmName') };
+  if (totalAcres <= 0) return { ok:false, message:'Enter total farm acres greater than zero.', el:$('#totalAcres') };
+  if (cropCount < 1) return { ok:false, message:'Enter at least one crop.', el:$('#cropCount') };
+  return { ok:true };
+}
+function validateJourney() {
+  const setup = validateSetup();
+  if (!setup.ok) return setup;
+  const crops = getCropCards();
+  const totalFarmAcres = num($('#totalAcres').value);
+  let cropAcresTotal = 0;
+  for (const [ci, crop] of crops.entries()) {
+    const nameInput = $('.crop-name', crop);
+    const acresInput = $('.crop-acres', crop);
+    const name = nameInput.value.trim();
+    const acres = num(acresInput.value);
+    if (!name) return { ok:false, message:`Enter a crop page name for Crop ${ci + 1}.`, el:nameInput };
+    if (acres <= 0) return { ok:false, message:`Enter crop acres greater than zero for ${name || 'Crop ' + (ci + 1)}.`, el:acresInput };
+    cropAcresTotal += acres;
+    const cash = $('.plan-entry[data-entry-type="cash"]', crop);
+    if (!entryComplete(cash)) return { ok:false, message:`Finish the cash crop window for ${name}. Missing: ${entryMissingMessage(cash)}.`, el:cash };
+    for (const entry of $$('.plan-entry', crop)) {
+      if (entry.dataset.entryType !== 'cash' && entryStarted(entry) && !entryComplete(entry)) {
+        return { ok:false, message:`Finish or remove the incomplete ${labelForType(entry.dataset.entryType)} entry for ${name}. Missing: ${entryMissingMessage(entry)}.`, el:entry };
+      }
+    }
+  }
+  const acreDifference = totalFarmAcres - cropAcresTotal;
+  if (Math.abs(acreDifference) > 0.01) {
+    const message = acreDifference > 0
+      ? `QA/QC: ${fmt(acreDifference, 2)} acres remain unassigned. Crop acres must equal total farm acres before export.`
+      : `QA/QC: Crop acres exceed total farm acres by ${fmt(Math.abs(acreDifference), 2)} acres. Adjust crop acres before export.`;
+    return { ok:false, message, el:$('#crops') };
+  }
+  return { ok:true };
+}
+function goToCrops() {
+  const check = validateSetup();
+  if (!check.ok) { showSetupQA(check.message); check.el?.focus(); return; }
+  showSetupQA('');
+  syncCropCardsToCount();
+  $('#cropsBarTitle').textContent = ($('#farmName').value.trim() || 'Farm') + ' — Crop Planner';
+  goTo('crops');
+}
+function goToSummary() {
+  const check = validateJourney();
+  if (!check.ok) { showCropQA(check.message); if (check.el) check.el.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+  showCropQA('');
+  renderSummary();
+  goTo('summary');
+}
+
+function desiredCropCount(writeValue = true) {
+  const input = $('#cropCount');
+  const raw = input.value.trim();
+  let count = Math.round(num(raw));
+  if (!raw) count = getCropCards().length || 1;
+  count = Math.min(MAX_CROPS, Math.max(1, count));
+  if (writeValue) input.value = String(count);
+  return count;
+}
+function syncCropCardsToCount() {
+  const target = desiredCropCount();
+  while ($$('.crop-card').length < target) addCrop(`Crop ${$$('.crop-card').length + 1}`, '');
+  while ($$('.crop-card').length > target) {
+    const all = $$('.crop-card');
+    all[all.length - 1].remove();
+  }
+  setActiveCrop(Math.min(activeCropIndex, target - 1));
+  calculateAll();
+}
+function addCrop(name = '', acres = '') {
+  cropCounter += 1;
+  const crop = $('#cropTemplate').content.firstElementChild.cloneNode(true);
+  crop.dataset.cropId = String(cropCounter);
+  $('.crop-name', crop).value = name;
+  $('.crop-acres', crop).value = acres;
+  $('.crop-year', crop).value = $('#planningYear').value || todayYear;
+  $('.entries', crop).appendChild(createEntry('cash'));
+  $('.add-pre', crop).addEventListener('click', () => ensureEntry(crop, 'pre'));
+  $('.add-post', crop).addEventListener('click', () => ensureEntry(crop, 'post'));
+  $('.remove-crop', crop).addEventListener('click', () => {
+    if ($$('.crop-card').length <= 1) return;
+    const removedIndex = $$('.crop-card').indexOf(crop);
+    crop.remove();
+    $('#cropCount').value = String($$('.crop-card').length);
+    setActiveCrop(Math.max(0, removedIndex - 1));
+    calculateAll();
+  });
+  crop.addEventListener('input', () => calculateAll());
+  crop.addEventListener('change', () => calculateAll());
+  $('#crops').appendChild(crop);
+  setActiveCrop($$('.crop-card').length - 1);
+  calculateAll();
+}
+function setActiveCrop(index) {
+  const crops = getCropCards();
+  if (!crops.length) return;
+  activeCropIndex = Math.max(0, Math.min(index, crops.length - 1));
+  crops.forEach((crop, i) => crop.classList.toggle('active-crop', i === activeCropIndex));
+  renderCropNavigation();
+  postHeight();
+}
+function renderCropNavigation() {
+  const crops = getCropCards();
+  const tabs = $('#cropTabs');
+  tabs.innerHTML = '';
+  crops.forEach((crop, index) => {
+    const name = $('.crop-name', crop)?.value.trim() || `Crop ${index + 1}`;
+    const btn = document.createElement('button');
+    btn.className = 'crop-tab' + (index === activeCropIndex ? ' active' : '');
+    btn.type = 'button';
+    btn.textContent = name;
+    btn.addEventListener('click', () => setActiveCrop(index));
+    tabs.appendChild(btn);
+  });
+  $('#cropPageCount').textContent = `Crop ${Math.min(activeCropIndex + 1, crops.length)} of ${crops.length}`;
+  $('#prevCropBtn').disabled = activeCropIndex <= 0;
+  $('#nextCropBtn').disabled = activeCropIndex >= crops.length - 1;
+}
+
+function getEntryData(crop, entry) {
+  const type = entry.dataset.entryType;
+  const cropName = $('.crop-name', crop).value.trim();
+  const cropAcres = num($('.crop-acres', crop).value);
+  const plantingYear = $('.planting-year', entry).value || $('.crop-year', crop).value || $('#planningYear').value;
+  const entryCrop = $('.entry-crop', entry).value.trim();
+  const variety = $('.variety', entry).value.trim();
+  const seedingRate = num($('.seeding-rate', entry).value);
+  const plantingDate = $('.planting-date', entry).value;
+  const harvestDate = $('.harvest-date', entry).value;
+  const terminationStyle = $('.termination-style', entry).value;
+  const rootDays = daysBetween(plantingDate, harvestDate);
+  const lri = rootDays / 365;
+  const notes = $('.notes', entry).value.trim();
+  const hasEntry = type === 'cash' || entryStarted(entry);
+  return { type, category: labelForType(type), cropName, cropAcres, plantingYear, entryCrop, variety, seedingRate, plantingDate, harvestDate, terminationStyle, rootDays, lri, notes, hasEntry };
+}
+function calculateAll() {
+  const totalAcres = num($('#totalAcres').value);
+  let cropAcresTotal = 0;
+  let weightedLriSum = 0;
+  let completedCropCount = 0;
+  getCropCards().forEach((crop, idx) => {
+    const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
+    const cropAcres = num($('.crop-acres', crop).value);
+    cropAcresTotal += cropAcres;
+    let cropLri = 0;
+    let rootDays = 0;
+    let entries = 0;
+    $$('.plan-entry', crop).forEach(entry => {
+      refreshEntry(entry);
+      const data = getEntryData(crop, entry);
+      if (!data.hasEntry) return;
+      cropLri += data.lri;
+      rootDays += data.rootDays;
+      entries += 1;
+    });
+    if (cropAcres > 0) weightedLriSum += cropLri * cropAcres;
+    if (cropLri > 0) completedCropCount += 1;
+    $('.crop-lri-total', crop).textContent = fmt(cropLri, 3);
+    $('.crop-root-days', crop).textContent = String(rootDays);
+    $('.crop-entries', crop).textContent = String(entries);
+    $('.crop-interpret', crop).textContent = interpretLri(cropLri);
+    $('.crop-lri-fill', crop).style.width = Math.min(100, Math.max(0, cropLri * 100)) + '%';
+  });
+  const remaining = totalAcres - cropAcresTotal;
+  $('#sumCropAcres').textContent = fmt(cropAcresTotal, 2);
+  $('#remainingAcres').textContent = fmt(remaining, 2);
+  $('#farmWeightedLri').textContent = fmt(totalAcres > 0 ? weightedLriSum / totalAcres : 0, 3);
+  $('#farmAvgLri').textContent = fmt(completedCropCount > 0 ? getCropCards().reduce((sum, crop) => sum + num($('.crop-lri-total', crop).textContent), 0) / completedCropCount : 0, 3);
+  const warning = $('#acreWarning');
+  if (totalAcres > 0 && Math.abs(remaining) > 0.01) {
+    warning.textContent = remaining < 0
+      ? `QA/QC: Crop acres exceed total farm acres by ${fmt(Math.abs(remaining), 2)} acres. Adjust crop acres before export.`
+      : `QA/QC: ${fmt(remaining, 2)} acres remain unassigned. Crop acres must equal total farm acres before export.`;
+    warning.classList.remove('hidden');
+  } else warning.classList.add('hidden');
+  renderCropNavigation();
+}
+
+function renderSummary() {
+  calculateAll();
+  const farmName = $('#farmName').value.trim() || 'Untitled Farm';
+  const preparedBy = $('#preparedBy').value.trim();
+  const planningYear = $('#planningYear').value;
+  const totalAcres = num($('#totalAcres').value);
+  const cropAcres = $('#sumCropAcres').textContent;
+  const remaining = $('#remainingAcres').textContent;
+  const weightedLri = $('#farmWeightedLri').textContent;
+  const avgLri = $('#farmAvgLri').textContent;
+  let totalFarmRootDays = 0;
+  let totalPlanningEntries = 0;
+  $$('.crop-card').forEach(crop => {
+    $$('.plan-entry', crop).forEach(entry => {
+      const data = getEntryData(crop, entry);
+      if (!data.hasEntry) return;
+      totalFarmRootDays += data.rootDays;
+      totalPlanningEntries += 1;
+    });
+  });
+  let html = `
+    <div class="summary-hero">
+      <div class="hero-lbl">Farm Weighted Living Root Index</div>
+      <div class="hero-val">${htmlEscape(weightedLri)}</div>
+      <div class="hero-sub">${htmlEscape(farmName)}${planningYear ? ' · ' + htmlEscape(planningYear) : ''}${preparedBy ? ' · ' + htmlEscape(preparedBy) : ''}</div>
+    </div>
+    <div class="summary-metrics">
+      <div class="summary-metric"><div class="m-val">${totalAcres > 0 ? fmt(totalAcres, 2) : '—'}</div><div class="m-lbl">Total Acres</div></div>
+      <div class="summary-metric"><div class="m-val">${htmlEscape(cropAcres)}</div><div class="m-lbl">Crop Acres</div></div>
+      <div class="summary-metric"><div class="m-val">${htmlEscape(remaining)}</div><div class="m-lbl">Remaining Acres</div></div>
+      <div class="summary-metric"><div class="m-val">${htmlEscape(avgLri)}</div><div class="m-lbl">Avg Crop LRI</div></div>
+      <div class="summary-metric"><div class="m-val">${totalFarmRootDays}</div><div class="m-lbl">Living Root Days</div></div>
+      <div class="summary-metric"><div class="m-val">${totalPlanningEntries}</div><div class="m-lbl">Planning Entries</div></div>
+    </div>
+    <div class="summary-metric"><div class="m-val interpret">${htmlEscape(interpretLong(num(weightedLri)))}</div><div class="m-lbl">Farm Interpretation</div></div>
+    <h3 class="summary-section-title">Crop Breakdown</h3>`;
+  $$('.crop-card').forEach((crop, ci) => {
+    const cropName = $('.crop-name', crop).value.trim() || `Crop ${ci + 1}`;
+    const acres = num($('.crop-acres', crop).value);
+    const lri = num($('.crop-lri-total', crop).textContent);
+    const rootDays = $('.crop-root-days', crop).textContent;
+    const entries = $('.crop-entries', crop).textContent;
+    let rows = '';
+    $$('.plan-entry', crop).forEach(entry => {
+      const data = getEntryData(crop, entry);
+      if (!data.hasEntry) return;
+      rows += `<tr>
+        <td>${htmlEscape(data.category)}</td>
+        <td>${htmlEscape(data.plantingYear || '—')}</td>
+        <td>${htmlEscape(data.entryCrop || '—')}</td>
+        <td>${htmlEscape(data.variety || '—')}</td>
+        <td>${data.seedingRate ? fmt(data.seedingRate, 2) : '—'}</td>
+        <td>${htmlEscape(data.plantingDate || '—')}</td>
+        <td>${htmlEscape(data.harvestDate || '—')}</td>
+        <td>${htmlEscape(data.terminationStyle || '—')}</td>
+        <td>${data.rootDays}</td>
+        <td>${fmt(data.lri, 3)}</td>
+      </tr>`;
+    });
+    html += `<div class="crop-summary-card">
+      <div class="crop-summary-head"><span class="csn">${htmlEscape(cropName)}</span><span class="csa">${acres ? fmt(acres, 2) + ' ac' : ''}</span></div>
+      <div class="summary-table-wrap"><table class="summary-table"><thead><tr><th>Window</th><th>Year</th><th>Crop</th><th>Variety</th><th>Seeding Rate lb/ac</th><th>Planting Date</th><th>Harvest/Termination</th><th>Termination Style</th><th>Days</th><th>LRI</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="summary-empty">${htmlEscape(interpretLong(lri))}</div>
+    </div>`;
+  });
+  $('#summaryContent').innerHTML = html;
+}
+
+function exportCsv() {
+  calculateAll();
+  const check = validateJourney();
+  if (!check.ok) { showSummaryQA(check.message); goTo('crops'); showCropQA(check.message); if (check.el) check.el.scrollIntoView({behavior:'smooth', block:'center'}); return; }
+  showSummaryQA('CSV downloaded.');
+  const farmName = $('#farmName').value.trim();
+  const preparedBy = $('#preparedBy').value.trim();
+  const planningYear = $('#planningYear').value;
+  const totalAcresNum = num($('#totalAcres').value);
+  const cropAcresEntered = num($('#sumCropAcres').textContent);
+  const remainingAcres = totalAcresNum - cropAcresEntered;
+  const weightedLri = num($('#farmWeightedLri').textContent);
+  const avgLri = num($('#farmAvgLri').textContent);
+  const rows = [
+    ['Crop Plan LRI Summary'],
+    ['Farm Name', farmName],
+    ['Prepared By', preparedBy],
+    ['Planning Year', planningYear],
+    ['Total Farm Acres', $('#totalAcres').value],
+    ['Crop Acres Entered', fmt(cropAcresEntered, 2)],
+    ['Remaining Acres', fmt(remainingAcres, 2)],
+    ['Farm Weighted Living Root Index', fmt(weightedLri, 3)],
+    ['Farm Average Crop LRI', fmt(avgLri, 3)],
+    ['Total Living Root Days', getCropCards().reduce((sum, crop) => sum + num($('.crop-root-days', crop).textContent), 0)],
+    ['Total Planning Entries', getCropCards().reduce((sum, crop) => sum + num($('.crop-entries', crop).textContent), 0)],
+    ['Farm LRI Interpretation', interpretLong(weightedLri)],
+    [],
+    ['Farm Name','Prepared By','Planning Year','Input Category','Crop Page Name','Crop Acres','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Crop LRI Interpretation','Notes']
+  ];
+  $$('.crop-card').forEach((crop, idx) => {
+    const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
+    const cropAcres = num($('.crop-acres', crop).value);
+    const totalCropLri = num($('.crop-lri-total', crop).textContent);
+    const cropInterpret = interpretLong(totalCropLri);
+    $$('.plan-entry', crop).forEach(entry => {
+      const data = getEntryData(crop, entry);
+      if (!data.hasEntry) return;
+      rows.push([farmName, preparedBy, planningYear, data.category, cropName, cropAcres, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), cropInterpret, data.notes]);
+    });
+  });
+  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = (farmName || 'crop_planner_lri').replace(/[^a-z0-9-_]+/gi, '_').replace(/^_+|_+$/g, '');
+  a.href = url;
+  a.download = `${safeName ? safeName + '_' : ''}Crop_Plan_LRI.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+$('#cropCount').addEventListener('change', syncCropCardsToCount);
+$('#cropCount').addEventListener('input', () => { if ($('#cropCount').value.trim()) syncCropCardsToCount(); });
+$('#prevCropBtn').addEventListener('click', () => setActiveCrop(activeCropIndex - 1));
+$('#nextCropBtn').addEventListener('click', () => setActiveCrop(activeCropIndex + 1));
+$('#exportCsvBtn').addEventListener('click', exportCsv);
+$('#exportCsvTopBtn').addEventListener('click', exportCsv);
+['farmName','totalAcres','preparedBy','planningYear'].forEach(id => {
+  $(`#${id}`).addEventListener('input', () => { if (id === 'planningYear') $$('.crop-year, .planting-year').forEach(el => { if (!el.value) el.value = $('#planningYear').value; }); calculateAll(); });
+  $(`#${id}`).addEventListener('change', calculateAll);
+});
+function goTo(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const screen = document.getElementById('screen-' + name);
+  if (screen) screen.classList.add('active');
+  window.scrollTo(0, 0);
+  setTimeout(postHeight, 60);
+}
+$('#planningYear').value = String(todayYear);
+$('#cropCount').value = '';
+setActiveCrop(0);
+window.addEventListener('load', () => setTimeout(postHeight, 100));
+window.addEventListener('resize', () => setTimeout(postHeight, 100));
+</script>
+</body>
+</html>
