@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>SCI Crop Planner & Living Root Index Tool</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +21,8 @@
   --white: #fff;
 }
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { touch-action: manipulation; }
 html, body {
   margin: 0;
   background: transparent;
@@ -29,9 +31,11 @@ html, body {
   line-height: 1.4;
   font-size: 13px;
 }
-button, input, select, textarea { font: inherit; }
-input, select, textarea { min-width: 0; max-width: 100%; }
-input[type="date"] { -webkit-appearance: none; appearance: none; line-height: normal; }
+button, input, select, textarea { font-family: inherit; }
+button { font: inherit; }
+input, select, textarea { min-width: 0; max-width: 100%; font-size: 16px; }
+input[type="date"] { -webkit-appearance: none; appearance: none; line-height: normal; display: block; width: 100%; font-size: 16px; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
 body { overflow-x: hidden; }
 .screen { display: none; width: 100%; min-height: 100vh; }
 .screen.active { display: block; }
@@ -65,7 +69,7 @@ h4 { font-size: 13px; }
 .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field.full { grid-column: span 2; }
 label, .label { color: var(--sci-muted); font-size: 9px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
-input, select, textarea { width: 100%; min-height: 36px; border: 1px solid var(--sci-line); border-radius: 9px; background: #fff; color: var(--sci-ink); padding: 7px 9px; outline: none; }
+input, select, textarea { width: 100%; min-height: 40px; border: 1px solid var(--sci-line); border-radius: 9px; background: #fff; color: var(--sci-ink); padding: 7px 9px; outline: none; }
 textarea { min-height: 54px; resize: vertical; }
 input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-shadow: 0 0 0 3px rgba(168,85,31,.12); }
 .btn, .btn-primary { border: 0; border-radius: 9px; padding: 7px 11px; color: #fff; background: var(--sci-leaf-deep); cursor: pointer; font-weight: 850; font-size: 12px; white-space: nowrap; }
@@ -106,7 +110,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
 .entry-grid .wide { grid-column: span 2; }
 .entry-grid .full { grid-column: 1 / -1; }
 .entry-grid .date-field { min-width: 0; }
-.entry-grid .date-field input[type="date"] { width: 100%; }
+.entry-grid .date-field input[type="date"] { width: 100%; min-width: 0; height: 42px; }
 .plan-entry.collapsed .entry-head, .plan-entry.collapsed .entry-body { display: none; }
 .plan-entry.collapsed .entry-summary { display: flex; }
 .lri-meter { height: 9px; width: 100%; background: #EEE4D3; border-radius: 999px; overflow: hidden; margin-top: 6px; }
@@ -420,7 +424,7 @@ function openEntry(entry) {
   }
   entry.classList.remove('collapsed');
   refreshEntry(entry);
-  setTimeout(() => entry.querySelector('input, select, textarea')?.focus(), 20);
+  // Do not auto-focus inputs on mobile. Auto-focus inside iframes can trigger iOS zoom that will not reset cleanly.
   setTimeout(postHeight, 40);
 }
 function collapseCompletedEntries(crop) { $$('.plan-entry', crop).forEach(entry => { refreshEntry(entry); if (entryComplete(entry)) entry.classList.add('collapsed'); }); }
