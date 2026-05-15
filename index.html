@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>SCI Crop Planner & Living Root Index Tool</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +30,8 @@ html, body {
   font-size: 13px;
 }
 button, input, select, textarea { font: inherit; }
+input, select, textarea { min-width: 0; max-width: 100%; }
+input[type="date"] { -webkit-appearance: none; appearance: none; line-height: normal; }
 body { overflow-x: hidden; }
 .screen { display: none; width: 100%; min-height: 100vh; }
 .screen.active { display: block; }
@@ -60,7 +62,7 @@ h4 { font-size: 13px; }
 .sub, .help { color: var(--sci-muted); font-size: 11px; margin-top: 2px; }
 .card, .crop-card, .crop-page-shell { background: var(--white); border: 1px solid var(--sci-line); border-radius: 14px; padding: 12px; margin-bottom: 10px; }
 .input-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.field { display: flex; flex-direction: column; gap: 5px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .field.full { grid-column: span 2; }
 label, .label { color: var(--sci-muted); font-size: 9px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
 input, select, textarea { width: 100%; min-height: 36px; border: 1px solid var(--sci-line); border-radius: 9px; background: #fff; color: var(--sci-ink); padding: 7px 9px; outline: none; }
@@ -103,6 +105,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
 .entry-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .entry-grid .wide { grid-column: span 2; }
 .entry-grid .full { grid-column: 1 / -1; }
+.entry-grid .date-field { min-width: 0; }
+.entry-grid .date-field input[type="date"] { width: 100%; }
 .plan-entry.collapsed .entry-head, .plan-entry.collapsed .entry-body { display: none; }
 .plan-entry.collapsed .entry-summary { display: flex; }
 .lri-meter { height: 9px; width: 100%; background: #EEE4D3; border-radius: 999px; overflow: hidden; margin-top: 6px; }
@@ -146,6 +150,18 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
   .crop-head { grid-template-columns: 1fr; }
   .entry-head { align-items: flex-start; }
   .btn, .back-btn, .app-bar-action { padding: 6px 8px; font-size: 11px; }
+  input, select, textarea {
+    font-size: 16px;
+    min-height: 42px;
+    padding: 9px 10px;
+  }
+  input[type="date"] {
+    height: 42px;
+    min-height: 42px;
+    padding: 8px 9px;
+  }
+  label, .label { font-size: 8.5px; letter-spacing: .075em; }
+  .entry-grid .date-field label { white-space: normal; line-height: 1.1; }
   .hero-val { font-size: 26px; }
 }
 </style>
@@ -285,8 +301,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
         <div class="field wide"><label>Crop / Cover Crop</label><input class="entry-crop" placeholder="Corn, rye, radish..." /></div>
         <div class="field"><label>Variety</label><input class="variety" placeholder="Optional" /></div>
         <div class="field"><label>Seeding Rate lb/ac</label><input class="seeding-rate" type="number" min="0" step="0.01" placeholder="0" /></div>
-        <div class="field"><label>Planting Date</label><input class="planting-date" type="date" /></div>
-        <div class="field"><label>Harvest / Termination Date</label><input class="harvest-date" type="date" /></div>
+        <div class="field date-field"><label>Planting Date</label><input class="planting-date" type="date" /></div>
+        <div class="field date-field"><label>Harvest / Termination Date</label><input class="harvest-date" type="date" /></div>
         <div class="field"><label>Termination Style</label><select class="termination-style"><option value="">Select if cover crop</option><option>Herbicide</option><option>Frost Kill</option><option>Winter Kill</option><option>Roller Crimp</option><option>Tillage</option><option>Harvest</option><option>Grazing</option><option>Other</option></select></div>
         <div class="field"><label>LRI</label><input class="entry-lri" readonly value="0.00" /></div>
         <div class="field full"><label>Notes</label><textarea class="notes" placeholder="Optional notes"></textarea></div>
