@@ -89,7 +89,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
 .crop-page-count { color: var(--sci-muted); font-size: 12px; font-weight: 850; }
 .crop-card { display: none; padding: 12px; }
 .crop-card.active-crop { display: block; }
-.crop-head { display: grid; grid-template-columns: minmax(170px, 1.1fr) minmax(110px,.45fr) minmax(105px,.35fr) auto; gap: 9px; align-items: end; padding: 10px; margin: -12px -12px 9px; background: var(--sci-soft); border-bottom: 1px solid var(--sci-line); border-radius: 14px 14px 0 0; }
+.crop-head { display: grid; grid-template-columns: minmax(160px, 1.1fr) minmax(95px,.4fr) minmax(90px,.35fr) minmax(95px,.35fr) auto; gap: 9px; align-items: end; padding: 10px; margin: -12px -12px 9px; background: var(--sci-soft); border-bottom: 1px solid var(--sci-line); border-radius: 14px 14px 0 0; }
 .crop-stats { display: none; }
 .stat { background: #FDFBF7; border: 1px solid var(--sci-line); border-radius: 8px; padding: 7px 8px; }
 .stat .value { color: var(--sci-leaf-deep); font-size: 15px; font-weight: 900; letter-spacing: -.03em; }
@@ -203,6 +203,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
       <div class="input-grid">
         <div class="field full"><label for="farmName">Farm Name</label><input id="farmName" placeholder="Example: ABC Farm" /></div>
         <div class="field"><label for="totalAcres">Total Acres</label><input id="totalAcres" type="number" min="0" step="0.01" placeholder="0" inputmode="decimal" /></div>
+        <div class="field"><label for="totalFields">Total Fields</label><input id="totalFields" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>
         <div class="field"><label for="cropCount">Number of Crops</label><input id="cropCount" type="number" min="1" max="10" step="1" placeholder="" inputmode="numeric" /></div>
         <div class="field"><label for="planningYear">Planning Year</label><input id="planningYear" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
         <div class="field"><label for="preparedBy">Prepared By</label><input id="preparedBy" placeholder="Optional" /></div>
@@ -260,6 +261,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
     </div>
     <div class="hidden" id="sumCropAcres">0.00</div>
     <div class="hidden" id="remainingAcres">0.00</div>
+    <div class="hidden" id="sumCropFields">0</div>
+    <div class="hidden" id="remainingFields">0</div>
     <div class="hidden" id="farmAvgLri">0.00</div>
     <div class="hidden" id="farmWeightedLri">0.00</div>
   </div>
@@ -270,6 +273,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
     <div class="crop-head">
       <div class="field"><label>Crop Page Name</label><input class="crop-name" placeholder="Corn, soybeans, wheat..." /></div>
       <div class="field"><label>Crop Acres</label><input class="crop-acres" type="number" min="0" step="0.01" placeholder="0" /></div>
+      <div class="field"><label>Crop Fields</label><input class="crop-fields" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>
       <div class="field"><label>Crop Year</label><input class="crop-year" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
       <button class="btn danger remove-crop" type="button">Remove Crop</button>
     </div>
@@ -444,9 +448,11 @@ function ensureEntry(crop, type) {
 function validateSetup() {
   const farmName = $('#farmName').value.trim();
   const totalAcres = num($('#totalAcres').value);
+  const totalFields = num($('#totalFields').value);
   const cropCount = desiredCropCount(false);
   if (!farmName) return { ok:false, message:'Enter a farm name before continuing.', el:$('#farmName') };
   if (totalAcres <= 0) return { ok:false, message:'Enter total farm acres greater than zero.', el:$('#totalAcres') };
+  if (totalFields <= 0) return { ok:false, message:'Enter total fields greater than zero.', el:$('#totalFields') };
   if (cropCount < 1) return { ok:false, message:'Enter at least one crop.', el:$('#cropCount') };
   return { ok:true };
 }
@@ -455,15 +461,21 @@ function validateJourney() {
   if (!setup.ok) return setup;
   const crops = getCropCards();
   const totalFarmAcres = num($('#totalAcres').value);
+  const totalFarmFields = num($('#totalFields').value);
   let cropAcresTotal = 0;
+  let cropFieldsTotal = 0;
   for (const [ci, crop] of crops.entries()) {
     const nameInput = $('.crop-name', crop);
     const acresInput = $('.crop-acres', crop);
+    const fieldsInput = $('.crop-fields', crop);
     const name = nameInput.value.trim();
     const acres = num(acresInput.value);
+    const fields = num(fieldsInput.value);
     if (!name) return { ok:false, message:`Enter a crop page name for Crop ${ci + 1}.`, el:nameInput };
     if (acres <= 0) return { ok:false, message:`Enter crop acres greater than zero for ${name || 'Crop ' + (ci + 1)}.`, el:acresInput };
+    if (fields <= 0) return { ok:false, message:`Enter crop fields greater than zero for ${name || 'Crop ' + (ci + 1)}.`, el:fieldsInput };
     cropAcresTotal += acres;
+    cropFieldsTotal += fields;
     const cash = $('.plan-entry[data-entry-type="cash"]', crop);
     if (!entryComplete(cash)) return { ok:false, message:`Finish the cash crop window for ${name}. Missing: ${entryMissingMessage(cash)}.`, el:cash };
     for (const entry of $$('.plan-entry', crop)) {
@@ -477,6 +489,13 @@ function validateJourney() {
     const message = acreDifference > 0
       ? `QA/QC: ${fmt(acreDifference, 2)} acres remain unassigned. Crop acres must equal total farm acres before export.`
       : `QA/QC: Crop acres exceed total farm acres by ${fmt(Math.abs(acreDifference), 2)} acres. Adjust crop acres before export.`;
+    return { ok:false, message, el:$('#crops') };
+  }
+  const fieldDifference = totalFarmFields - cropFieldsTotal;
+  if (Math.abs(fieldDifference) > 0.01) {
+    const message = fieldDifference > 0
+      ? `QA/QC: ${fmt(fieldDifference, 0)} fields remain unassigned. Crop fields must equal total fields before export.`
+      : `QA/QC: Crop fields exceed total fields by ${fmt(Math.abs(fieldDifference), 0)} fields. Adjust crop fields before export.`;
     return { ok:false, message, el:$('#crops') };
   }
   return { ok:true };
@@ -570,6 +589,7 @@ function getEntryData(crop, entry) {
   const type = entry.dataset.entryType;
   const cropName = $('.crop-name', crop).value.trim();
   const cropAcres = num($('.crop-acres', crop).value);
+  const cropFields = num($('.crop-fields', crop).value);
   const plantingYear = $('.planting-year', entry).value || $('.crop-year', crop).value || $('#planningYear').value;
   const entryCrop = $('.entry-crop', entry).value.trim();
   const variety = $('.variety', entry).value.trim();
@@ -581,17 +601,21 @@ function getEntryData(crop, entry) {
   const lri = rootDays / 365;
   const notes = $('.notes', entry).value.trim();
   const hasEntry = type === 'cash' || entryStarted(entry);
-  return { type, category: labelForType(type), cropName, cropAcres, plantingYear, entryCrop, variety, seedingRate, plantingDate, harvestDate, terminationStyle, rootDays, lri, notes, hasEntry };
+  return { type, category: labelForType(type), cropName, cropAcres, cropFields, plantingYear, entryCrop, variety, seedingRate, plantingDate, harvestDate, terminationStyle, rootDays, lri, notes, hasEntry };
 }
 function calculateAll() {
   const totalAcres = num($('#totalAcres').value);
+  const totalFields = num($('#totalFields').value);
   let cropAcresTotal = 0;
+  let cropFieldsTotal = 0;
   let weightedLriSum = 0;
   let completedCropCount = 0;
   getCropCards().forEach((crop, idx) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
     const cropAcres = num($('.crop-acres', crop).value);
+    const cropFields = num($('.crop-fields', crop).value);
     cropAcresTotal += cropAcres;
+    cropFieldsTotal += cropFields;
     let cropLri = 0;
     let rootDays = 0;
     let entries = 0;
@@ -612,8 +636,13 @@ function calculateAll() {
     $('.crop-lri-fill', crop).style.width = Math.min(100, Math.max(0, cropLri * 100)) + '%';
   });
   const remaining = totalAcres - cropAcresTotal;
+  const remainingFields = totalFields - cropFieldsTotal;
   $('#sumCropAcres').textContent = fmt(cropAcresTotal, 2);
   $('#remainingAcres').textContent = fmt(remaining, 2);
+  const sumCropFieldsEl = $('#sumCropFields');
+  const remainingFieldsEl = $('#remainingFields');
+  if (sumCropFieldsEl) sumCropFieldsEl.textContent = fmt(cropFieldsTotal, 0);
+  if (remainingFieldsEl) remainingFieldsEl.textContent = fmt(remainingFields, 0);
   $('#farmWeightedLri').textContent = fmt(totalAcres > 0 ? weightedLriSum / totalAcres : 0, 3);
   $('#farmAvgLri').textContent = fmt(completedCropCount > 0 ? getCropCards().reduce((sum, crop) => sum + num($('.crop-lri-total', crop).textContent), 0) / completedCropCount : 0, 3);
   const warning = $('#acreWarning');
@@ -621,6 +650,11 @@ function calculateAll() {
     warning.textContent = remaining < 0
       ? `QA/QC: Crop acres exceed total farm acres by ${fmt(Math.abs(remaining), 2)} acres. Adjust crop acres before export.`
       : `QA/QC: ${fmt(remaining, 2)} acres remain unassigned. Crop acres must equal total farm acres before export.`;
+    warning.classList.remove('hidden');
+  } else if (totalFields > 0 && Math.abs(remainingFields) > 0.01) {
+    warning.textContent = remainingFields < 0
+      ? `QA/QC: Crop fields exceed total fields by ${fmt(Math.abs(remainingFields), 0)} fields. Adjust crop fields before export.`
+      : `QA/QC: ${fmt(remainingFields, 0)} fields remain unassigned. Crop fields must equal total fields before export.`;
     warning.classList.remove('hidden');
   } else warning.classList.add('hidden');
   renderCropNavigation();
@@ -632,8 +666,11 @@ function renderSummary() {
   const preparedBy = $('#preparedBy').value.trim();
   const planningYear = $('#planningYear').value;
   const totalAcres = num($('#totalAcres').value);
+  const totalFields = num($('#totalFields').value);
   const cropAcres = $('#sumCropAcres').textContent;
   const remaining = $('#remainingAcres').textContent;
+  const cropFields = $('#sumCropFields') ? $('#sumCropFields').textContent : '0';
+  const remainingFields = $('#remainingFields') ? $('#remainingFields').textContent : '0';
   const weightedLri = $('#farmWeightedLri').textContent;
   const avgLri = $('#farmAvgLri').textContent;
   let totalFarmRootDays = 0;
@@ -657,6 +694,9 @@ function renderSummary() {
       <div class="summary-metric"><div class="m-val">${htmlEscape(cropAcres)}</div><div class="m-lbl">Crop Acres</div></div>
       <div class="summary-metric"><div class="m-val">${htmlEscape(remaining)}</div><div class="m-lbl">Remaining Acres</div></div>
       <div class="summary-metric"><div class="m-val">${htmlEscape(avgLri)}</div><div class="m-lbl">Avg Crop LRI</div></div>
+      <div class="summary-metric"><div class="m-val">${totalFields > 0 ? fmt(totalFields, 0) : '—'}</div><div class="m-lbl">Total Fields</div></div>
+      <div class="summary-metric"><div class="m-val">${htmlEscape(cropFields)}</div><div class="m-lbl">Crop Fields</div></div>
+      <div class="summary-metric"><div class="m-val">${htmlEscape(remainingFields)}</div><div class="m-lbl">Remaining Fields</div></div>
       <div class="summary-metric"><div class="m-val">${totalFarmRootDays}</div><div class="m-lbl">Living Root Days</div></div>
       <div class="summary-metric"><div class="m-val">${totalPlanningEntries}</div><div class="m-lbl">Planning Entries</div></div>
     </div>
@@ -665,6 +705,7 @@ function renderSummary() {
   $$('.crop-card').forEach((crop, ci) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${ci + 1}`;
     const acres = num($('.crop-acres', crop).value);
+    const fields = num($('.crop-fields', crop).value);
     const lri = num($('.crop-lri-total', crop).textContent);
     const rootDays = $('.crop-root-days', crop).textContent;
     const entries = $('.crop-entries', crop).textContent;
@@ -686,7 +727,7 @@ function renderSummary() {
       </tr>`;
     });
     html += `<div class="crop-summary-card">
-      <div class="crop-summary-head"><span class="csn">${htmlEscape(cropName)}</span><span class="csa">${acres ? fmt(acres, 2) + ' ac' : ''}</span></div>
+      <div class="crop-summary-head"><span class="csn">${htmlEscape(cropName)}</span><span class="csa">${acres ? fmt(acres, 2) + ' ac' : ''}${fields ? ' · ' + fmt(fields, 0) + ' fields' : ''}</span></div>
       <div class="summary-table-wrap"><table class="summary-table"><thead><tr><th>Window</th><th>Year</th><th>Crop</th><th>Variety</th><th>Seeding Rate lb/ac</th><th>Planting Date</th><th>Harvest/Termination</th><th>Termination Style</th><th>Days</th><th>LRI</th></tr></thead><tbody>${rows}</tbody></table></div>
       <div class="summary-empty">${htmlEscape(interpretLong(lri))}</div>
     </div>`;
@@ -703,8 +744,11 @@ function exportCsv() {
   const preparedBy = $('#preparedBy').value.trim();
   const planningYear = $('#planningYear').value;
   const totalAcresNum = num($('#totalAcres').value);
+  const totalFieldsNum = num($('#totalFields').value);
   const cropAcresEntered = num($('#sumCropAcres').textContent);
+  const cropFieldsEntered = num($('#sumCropFields') ? $('#sumCropFields').textContent : 0);
   const remainingAcres = totalAcresNum - cropAcresEntered;
+  const remainingFields = totalFieldsNum - cropFieldsEntered;
   const weightedLri = num($('#farmWeightedLri').textContent);
   const avgLri = num($('#farmAvgLri').textContent);
   const rows = [
@@ -713,25 +757,29 @@ function exportCsv() {
     ['Prepared By', preparedBy],
     ['Planning Year', planningYear],
     ['Total Farm Acres', $('#totalAcres').value],
+    ['Total Fields', $('#totalFields').value],
     ['Crop Acres Entered', fmt(cropAcresEntered, 2)],
+    ['Crop Fields Entered', fmt(cropFieldsEntered, 0)],
     ['Remaining Acres', fmt(remainingAcres, 2)],
+    ['Remaining Fields', fmt(remainingFields, 0)],
     ['Farm Weighted Living Root Index', fmt(weightedLri, 3)],
     ['Farm Average Crop LRI', fmt(avgLri, 3)],
     ['Total Living Root Days', getCropCards().reduce((sum, crop) => sum + num($('.crop-root-days', crop).textContent), 0)],
     ['Total Planning Entries', getCropCards().reduce((sum, crop) => sum + num($('.crop-entries', crop).textContent), 0)],
     ['Farm LRI Interpretation', interpretLong(weightedLri)],
     [],
-    ['Farm Name','Prepared By','Planning Year','Input Category','Crop Page Name','Crop Acres','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Crop LRI Interpretation','Notes']
+    ['Farm Name','Prepared By','Planning Year','Total Fields','Input Category','Crop Page Name','Crop Acres','Crop Fields','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Crop LRI Interpretation','Notes']
   ];
   $$('.crop-card').forEach((crop, idx) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
     const cropAcres = num($('.crop-acres', crop).value);
+    const cropFields = num($('.crop-fields', crop).value);
     const totalCropLri = num($('.crop-lri-total', crop).textContent);
     const cropInterpret = interpretLong(totalCropLri);
     $$('.plan-entry', crop).forEach(entry => {
       const data = getEntryData(crop, entry);
       if (!data.hasEntry) return;
-      rows.push([farmName, preparedBy, planningYear, data.category, cropName, cropAcres, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), cropInterpret, data.notes]);
+      rows.push([farmName, preparedBy, planningYear, totalFieldsNum, data.category, cropName, cropAcres, cropFields, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), cropInterpret, data.notes]);
     });
   });
   const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
@@ -753,7 +801,7 @@ $('#prevCropBtn').addEventListener('click', () => setActiveCrop(activeCropIndex 
 $('#nextCropBtn').addEventListener('click', () => setActiveCrop(activeCropIndex + 1));
 $('#exportCsvBtn').addEventListener('click', exportCsv);
 $('#exportCsvTopBtn').addEventListener('click', exportCsv);
-['farmName','totalAcres','preparedBy','planningYear'].forEach(id => {
+['farmName','totalAcres','totalFields','preparedBy','planningYear'].forEach(id => {
   $(`#${id}`).addEventListener('input', () => { if (id === 'planningYear') $$('.crop-year, .planting-year').forEach(el => { if (!el.value) el.value = $('#planningYear').value; }); calculateAll(); });
   $(`#${id}`).addEventListener('change', calculateAll);
 });
