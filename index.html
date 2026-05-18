@@ -784,7 +784,7 @@ function exportCsv() {
     ['Total Planning Entries', getCropCards().reduce((sum, crop) => sum + num($('.crop-entries', crop).textContent), 0)],
     ['Farm LRI Interpretation', interpretLong(weightedLri)],
     [],
-    ['Farm Name','Prepared By','Planning Year','Total Fields','Input Category','Crop Page Name','Crop Acres','Crop Fields','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Annual Crop Living Root %','Annual Farm-Wide Per Crop Living Root %','Crop LRI Interpretation','Notes']
+    ['Farm Name','Prepared By','Planning Year','Total Fields','Input Category','Crop Page Name','Crop Acres','Crop Fields','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Annual Crop Living Root %','Crop LRI Interpretation','Notes']
   ];
   $$('.crop-card').forEach((crop, idx) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
@@ -792,12 +792,11 @@ function exportCsv() {
     const cropFields = num($('.crop-fields', crop).value);
     const totalCropLri = num($('.crop-lri-total', crop).textContent);
     const cropLivingRootPct = livingRootPct(totalCropLri);
-    const farmWideCropPct = farmWideCropLivingRootPct(totalCropLri, cropAcres, totalAcresNum);
     const cropInterpret = interpretLong(totalCropLri);
     $$('.plan-entry', crop).forEach(entry => {
       const data = getEntryData(crop, entry);
       if (!data.hasEntry) return;
-      rows.push([farmName, preparedBy, planningYear, totalFieldsNum, data.category, cropName, cropAcres, cropFields, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), fmt(cropLivingRootPct, 1) + '%', fmt(farmWideCropPct, 1) + '%', cropInterpret, data.notes]);
+      rows.push([farmName, preparedBy, planningYear, totalFieldsNum, data.category, cropName, cropAcres, cropFields, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), fmt(cropLivingRootPct, 1) + '%', cropInterpret, data.notes]);
     });
   });
   const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
