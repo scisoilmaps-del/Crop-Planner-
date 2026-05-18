@@ -285,7 +285,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
       <span class="crop-lri-fill"></span>
     </div>
     <div class="optional-bar optional-add-actions">
-      <div class="help">Cash crop is always included. Add a pre-season or post-harvest cover crop only when needed. Opening one section collapses the previous entry to save space.</div>
+      <div class="help">Cash crop is always included. Pre-season and post-harvest cover crops are optional in QA/QC and only counted when entered. Opening one section collapses the previous entry to save space.</div>
       <button class="btn ghost add-pre" type="button">+ Add Pre-Season Cover Crop</button>
       <button class="btn ghost add-post" type="button">+ Add Post-Harvest Cover Crop</button>
     </div>
@@ -363,6 +363,10 @@ function interpretLong(lri) {
   if (lri < 0.50) return 'Moderate-duration cover or rotation phase; roots active about 3–6 months. Noticeable improvement in soil cover and structure.';
   if (lri < 0.75) return 'Strong cover-crop or long-season crop window; roots active about 6–9 months. Good for organic-matter building and water holding.';
   return 'Near-continuous or multi-species cover-crop system; roots active 9+ months. Very high living-root time.';
+}
+function livingRootPct(lri) { return Math.max(0, lri) * 100; }
+function farmWideCropLivingRootPct(cropLri, cropAcres, totalAcres) {
+  return totalAcres > 0 ? (Math.max(0, cropLri) * Math.max(0, cropAcres) / totalAcres) * 100 : 0;
 }
 function entryStarted(entry) {
   return ['.entry-crop','.variety','.seeding-rate','.planting-date','.harvest-date','.termination-style','.notes'].some(sel => ($(sel, entry)?.value || '').trim());
@@ -480,7 +484,7 @@ function validateJourney() {
     if (!entryComplete(cash)) return { ok:false, message:`Finish the cash crop window for ${name}. Missing: ${entryMissingMessage(cash)}.`, el:cash };
     for (const entry of $$('.plan-entry', crop)) {
       if (entry.dataset.entryType !== 'cash' && entryStarted(entry) && !entryComplete(entry)) {
-        return { ok:false, message:`Finish or remove the incomplete ${labelForType(entry.dataset.entryType)} entry for ${name}. Missing: ${entryMissingMessage(entry)}.`, el:entry };
+        return { ok:false, message:`Optional cover crop started for ${name}. Finish it or remove it before export. Missing: ${entryMissingMessage(entry)}.`, el:entry };
       }
     }
   }
@@ -672,6 +676,7 @@ function renderSummary() {
   const cropFields = $('#sumCropFields') ? $('#sumCropFields').textContent : '0';
   const remainingFields = $('#remainingFields') ? $('#remainingFields').textContent : '0';
   const weightedLri = $('#farmWeightedLri').textContent;
+  const weightedLivingRootPct = livingRootPct(num(weightedLri));
   const avgLri = $('#farmAvgLri').textContent;
   let totalFarmRootDays = 0;
   let totalPlanningEntries = 0;
@@ -693,6 +698,7 @@ function renderSummary() {
       <div class="summary-metric"><div class="m-val">${totalAcres > 0 ? fmt(totalAcres, 2) : '—'}</div><div class="m-lbl">Total Acres</div></div>
       <div class="summary-metric"><div class="m-val">${htmlEscape(cropAcres)}</div><div class="m-lbl">Crop Acres</div></div>
       <div class="summary-metric"><div class="m-val">${htmlEscape(remaining)}</div><div class="m-lbl">Remaining Acres</div></div>
+      <div class="summary-metric"><div class="m-val">${fmt(weightedLivingRootPct, 1)}%</div><div class="m-lbl">Farm Living Root %</div></div>
       <div class="summary-metric"><div class="m-val">${htmlEscape(avgLri)}</div><div class="m-lbl">Avg Crop LRI</div></div>
       <div class="summary-metric"><div class="m-val">${totalFields > 0 ? fmt(totalFields, 0) : '—'}</div><div class="m-lbl">Total Fields</div></div>
       <div class="summary-metric"><div class="m-val">${htmlEscape(cropFields)}</div><div class="m-lbl">Crop Fields</div></div>
@@ -709,6 +715,8 @@ function renderSummary() {
     const lri = num($('.crop-lri-total', crop).textContent);
     const rootDays = $('.crop-root-days', crop).textContent;
     const entries = $('.crop-entries', crop).textContent;
+    const cropLivingRootPct = livingRootPct(lri);
+    const farmWideCropPct = farmWideCropLivingRootPct(lri, acres, totalAcres);
     let rows = '';
     $$('.plan-entry', crop).forEach(entry => {
       const data = getEntryData(crop, entry);
@@ -728,6 +736,12 @@ function renderSummary() {
     });
     html += `<div class="crop-summary-card">
       <div class="crop-summary-head"><span class="csn">${htmlEscape(cropName)}</span><span class="csa">${acres ? fmt(acres, 2) + ' ac' : ''}${fields ? ' · ' + fmt(fields, 0) + ' fields' : ''}</span></div>
+      <div class="crop-summary-body">
+        <div class="cs-stat"><div class="csv">${fmt(lri, 3)}</div><div class="csl">Total Crop LRI</div></div>
+        <div class="cs-stat"><div class="csv">${fmt(cropLivingRootPct, 1)}%</div><div class="csl">Annual Crop Living Root %</div></div>
+        <div class="cs-stat"><div class="csv">${fmt(farmWideCropPct, 1)}%</div><div class="csl">Farm-Wide Per Crop Living Root %</div></div>
+        <div class="cs-stat"><div class="csv">${rootDays}</div><div class="csl">Living Root Days</div></div>
+      </div>
       <div class="summary-table-wrap"><table class="summary-table"><thead><tr><th>Window</th><th>Year</th><th>Crop</th><th>Variety</th><th>Seeding Rate lb/ac</th><th>Planting Date</th><th>Harvest/Termination</th><th>Termination Style</th><th>Days</th><th>LRI</th></tr></thead><tbody>${rows}</tbody></table></div>
       <div class="summary-empty">${htmlEscape(interpretLong(lri))}</div>
     </div>`;
@@ -750,6 +764,7 @@ function exportCsv() {
   const remainingAcres = totalAcresNum - cropAcresEntered;
   const remainingFields = totalFieldsNum - cropFieldsEntered;
   const weightedLri = num($('#farmWeightedLri').textContent);
+  const weightedLivingRootPct = livingRootPct(weightedLri);
   const avgLri = num($('#farmAvgLri').textContent);
   const rows = [
     ['Crop Plan LRI Summary'],
@@ -763,23 +778,26 @@ function exportCsv() {
     ['Remaining Acres', fmt(remainingAcres, 2)],
     ['Remaining Fields', fmt(remainingFields, 0)],
     ['Farm Weighted Living Root Index', fmt(weightedLri, 3)],
+    ['Farm Weighted Living Root %', fmt(weightedLivingRootPct, 1) + '%'],
     ['Farm Average Crop LRI', fmt(avgLri, 3)],
     ['Total Living Root Days', getCropCards().reduce((sum, crop) => sum + num($('.crop-root-days', crop).textContent), 0)],
     ['Total Planning Entries', getCropCards().reduce((sum, crop) => sum + num($('.crop-entries', crop).textContent), 0)],
     ['Farm LRI Interpretation', interpretLong(weightedLri)],
     [],
-    ['Farm Name','Prepared By','Planning Year','Total Fields','Input Category','Crop Page Name','Crop Acres','Crop Fields','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Crop LRI Interpretation','Notes']
+    ['Farm Name','Prepared By','Planning Year','Total Fields','Input Category','Crop Page Name','Crop Acres','Crop Fields','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Annual Crop Living Root %','Annual Farm-Wide Per Crop Living Root %','Crop LRI Interpretation','Notes']
   ];
   $$('.crop-card').forEach((crop, idx) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
     const cropAcres = num($('.crop-acres', crop).value);
     const cropFields = num($('.crop-fields', crop).value);
     const totalCropLri = num($('.crop-lri-total', crop).textContent);
+    const cropLivingRootPct = livingRootPct(totalCropLri);
+    const farmWideCropPct = farmWideCropLivingRootPct(totalCropLri, cropAcres, totalAcresNum);
     const cropInterpret = interpretLong(totalCropLri);
     $$('.plan-entry', crop).forEach(entry => {
       const data = getEntryData(crop, entry);
       if (!data.hasEntry) return;
-      rows.push([farmName, preparedBy, planningYear, totalFieldsNum, data.category, cropName, cropAcres, cropFields, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), cropInterpret, data.notes]);
+      rows.push([farmName, preparedBy, planningYear, totalFieldsNum, data.category, cropName, cropAcres, cropFields, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), fmt(cropLivingRootPct, 1) + '%', fmt(farmWideCropPct, 1) + '%', cropInterpret, data.notes]);
     });
   });
   const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
