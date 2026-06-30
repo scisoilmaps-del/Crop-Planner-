@@ -79,6 +79,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
 .btn.danger { background: #8D3B1F; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .qa-box { border-left: 4px solid var(--sci-clay); background: var(--warn-bg); color: var(--sci-earth); padding: 8px 10px; border-radius: 9px; font-size: 12px; margin-bottom: 8px; }
+.guidance-box { border: 1px solid #FDBA74; background: #FFF7ED; color: var(--sci-earth); padding: 10px 12px; border-radius: 14px; font-size: 13px; margin: 0 0 10px; }
+.guidance-box strong { color: var(--sci-clay); font-weight: 900; }
 .hidden { display: none !important; }
 .crop-page-shell { padding: 10px; }
 .crop-page-top { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -198,13 +200,14 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
       <h2>Farm details</h2>
       <div class="sub">Retain the basic farm setup details, then create one page per crop.</div>
     </div>
+    <div class="guidance-box"><strong>Farm planning guidance:</strong> If the same crop has different practice systems, management timelines, or field groups, enter each system as its own crop count and title. Example: <em>Corn — No Till</em> and <em>Corn — Tillage</em>. This keeps acres, field-boundary assignments, and practice records clear without changing the tool logic.</div>
     <div id="setupQa" class="qa-box hidden"></div>
     <section class="card">
       <div class="input-grid">
         <div class="field full"><label for="farmName">Farm Name</label><input id="farmName" placeholder="Example: ABC Farm" /></div>
         <div class="field"><label for="totalAcres">Total Acres</label><input id="totalAcres" type="number" min="0" step="0.01" placeholder="0" inputmode="decimal" /></div>
         <div class="field"><label for="totalFields">Total Fields</label><input id="totalFields" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>
-        <div class="field"><label for="cropCount">Number of Crops</label><input id="cropCount" type="number" min="1" max="10" step="1" placeholder="" inputmode="numeric" /></div>
+        <div class="field"><label for="cropCount">Number of Crops</label><input id="cropCount" type="number" min="1" max="10" step="1" placeholder="" inputmode="numeric" /><div class="help">You can add up to 10 crop pages in this planner.</div></div>
         <div class="field"><label for="planningYear">Planning Year</label><input id="planningYear" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
         <div class="field"><label for="preparedBy">Prepared By</label><input id="preparedBy" placeholder="Optional" /></div>
       </div>
@@ -406,7 +409,7 @@ function createEntry(type = 'cash') {
   $('.entry-summary', entry).addEventListener('click', ev => { if (ev.target.closest('button')) return; openEntry(entry); });
   $('.remove-entry', entry).addEventListener('click', () => { entry.remove(); calculateAll(); postHeight(); });
   entry.addEventListener('input', () => { refreshEntry(entry); calculateAll(); });
-  entry.addEventListener('change', () => { refreshEntry(entry); calculateAll(); collapseCompletedEntries(entry.closest('.crop-card')); });
+  entry.addEventListener('change', () => { refreshEntry(entry); calculateAll(); });
   refreshEntry(entry);
   return entry;
 }
@@ -435,7 +438,6 @@ function openEntry(entry) {
   // Do not auto-focus inputs on mobile. Auto-focus inside iframes can trigger iOS zoom that will not reset cleanly.
   setTimeout(postHeight, 40);
 }
-function collapseCompletedEntries(crop) { $$('.plan-entry', crop).forEach(entry => { refreshEntry(entry); if (entryComplete(entry)) entry.classList.add('collapsed'); }); }
 function ensureEntry(crop, type) {
   let entry = $(`.plan-entry[data-entry-type="${type}"]`, crop);
   if (!entry) {
@@ -509,6 +511,7 @@ function goToCrops() {
   if (!check.ok) { showSetupQA(check.message); check.el?.focus(); return; }
   showSetupQA('');
   syncCropCardsToCount();
+  setActiveCrop(0);
   $('#cropsBarTitle').textContent = ($('#farmName').value.trim() || 'Farm') + ' — Crop Planner';
   goTo('crops');
 }
@@ -826,6 +829,7 @@ function goTo(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const screen = document.getElementById('screen-' + name);
   if (screen) screen.classList.add('active');
+  if (name === 'crops') setActiveCrop(0);
   window.scrollTo(0, 0);
   setTimeout(postHeight, 60);
 }
