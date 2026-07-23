@@ -280,7 +280,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
   <section class="crop-card" data-crop-id="">
     <div class="crop-head">
       <div class="field"><label>Crop Page Name</label><input class="crop-name" placeholder="Corn, soybeans, wheat..." /></div>
-      <div class="field"><label>Crop Type</label><input class="crop-type" type="text" placeholder="Enter crop type" /></div>
+      <div class="field"><label>Crop Type</label><select class="crop-type"><option value="">Select crop type</option><option>Corn</option><option>Soybeans</option><option>Wheat</option><option>Rice</option><option>Cotton</option><option>Sorghum</option><option>Barley</option><option>Oats</option><option>Hay / Forage</option><option>Vegetables</option><option>Orchard / Tree Crop</option><option>Vineyard</option><option>Other</option></select></div>
+      <div class="field crop-type-other-wrap hidden"><label>Other Crop Type</label><input class="crop-type-other" placeholder="Describe crop type" /></div>
       <div class="field"><label>Crop Acres</label><input class="crop-acres" type="number" min="0" step="0.01" placeholder="0" /></div>
       <div class="field"><label>Crop Fields</label><input class="crop-fields" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>
       <div class="field"><label>Crop Year</label><input class="crop-year" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
@@ -623,10 +624,12 @@ function addCrop(name = '', acres = '') {
   $('.crop-year', crop).value = $('#planningYear').value || todayYear;
   $('.entries', crop).appendChild(createEntry('cash'));
   const syncCropSetup = () => {
+    $('.crop-type-other-wrap', crop).classList.toggle('hidden', $('.crop-type', crop).value !== 'Other');
     $('.no-till-drill-wrap', crop).classList.toggle('hidden', !$('.no-till', crop).checked);
     $('.traffic-why-wrap', crop).classList.toggle('hidden', $('.designated-traffic', crop).value !== 'No');
     calculateAll(); postHeight();
   };
+  $('.crop-type', crop).addEventListener('change', syncCropSetup);
   $('.no-till', crop).addEventListener('change', syncCropSetup);
   $('.designated-traffic', crop).addEventListener('change', syncCropSetup);
   $('.is-perennial', crop).addEventListener('change', () => syncPerennialMode(crop));
@@ -863,7 +866,7 @@ function exportCsv() {
   const rows = [headers];
   $$('.crop-card').forEach((crop, idx) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
-    const cropType = $('.crop-type', crop).value.trim();
+    const cropType = $('.crop-type', crop).value === 'Other' ? ($('.crop-type-other', crop).value.trim() || 'Other') : $('.crop-type', crop).value;
     const base = {
       farmName, farmPlanningYear: planningYear, section: 'crop_planner', cropName, cropType,
       acres: $('.crop-acres', crop).value, fields: $('.crop-fields', crop).value,
