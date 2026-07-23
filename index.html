@@ -91,7 +91,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
 .crop-page-count { color: var(--sci-muted); font-size: 12px; font-weight: 850; }
 .crop-card { display: none; padding: 12px; }
 .crop-card.active-crop { display: block; }
-.crop-head { display: grid; grid-template-columns: minmax(160px, 1.1fr) minmax(95px,.4fr) minmax(90px,.35fr) minmax(95px,.35fr) auto; gap: 9px; align-items: end; padding: 10px; margin: -12px -12px 9px; background: var(--sci-soft); border-bottom: 1px solid var(--sci-line); border-radius: 14px 14px 0 0; }
+.crop-head { display: grid; grid-template-columns: minmax(160px, 1.1fr) minmax(95px,.4fr) minmax(90px,.35fr) minmax(95px,.35fr) minmax(150px,.55fr) auto; gap: 9px; align-items: end; padding: 10px; margin: -12px -12px 9px; background: var(--sci-soft); border-bottom: 1px solid var(--sci-line); border-radius: 14px 14px 0 0; }
 .crop-stats { display: none; }
 .stat { background: #FDFBF7; border: 1px solid var(--sci-line); border-radius: 8px; padding: 7px 8px; }
 .stat .value { color: var(--sci-leaf-deep); font-size: 15px; font-weight: 900; letter-spacing: -.03em; }
@@ -99,6 +99,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
 .optional-add-actions { padding-top: 8px; margin-top: 2px; border-top: 1px solid #EFE7D7; }
 .optional-add-actions .btn { flex: 1 1 240px; }
 .crop-hidden-metrics { display:none !important; }
+.perennial-panel { border:1px solid var(--sci-line); background:#FDFBF7; border-radius:12px; padding:10px; margin:0 0 10px; }
+.perennial-panel.hidden { display:none; }
+.perennial-title { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; margin-bottom:8px; }
+.check-tile { display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 9px; border:1px solid var(--sci-line); border-radius:9px; background:#fff; color:var(--sci-earth); font-size:12px; font-weight:800; text-transform:none; letter-spacing:0; }
+.check-tile input { width:auto; min-height:auto; }
 .optional-bar .help { margin: 0; flex: 1 1 220px; }
 .plan-entry { border: 1px solid #EFE7D7; border-radius: 12px; overflow: hidden; margin: 8px 0; background: #fff; }
 .entry-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 9px; background: #F4EBD9; border-bottom: 1px solid var(--sci-line); }
@@ -275,9 +280,15 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
   <section class="crop-card" data-crop-id="">
     <div class="crop-head">
       <div class="field"><label>Crop Page Name</label><input class="crop-name" placeholder="Corn, soybeans, wheat..." /></div>
+      <div class="field"><label>Crop Type</label><select class="crop-type"><option value="">Select crop type</option><option>Corn</option><option>Soybeans</option><option>Wheat</option><option>Rice</option><option>Cotton</option><option>Sorghum</option><option>Barley</option><option>Oats</option><option>Hay / Forage</option><option>Vegetables</option><option>Orchard / Tree Crop</option><option>Vineyard</option><option>Other</option></select></div>
+      <div class="field crop-type-other-wrap hidden"><label>Other Crop Type</label><input class="crop-type-other" placeholder="Describe crop type" /></div>
       <div class="field"><label>Crop Acres</label><input class="crop-acres" type="number" min="0" step="0.01" placeholder="0" /></div>
       <div class="field"><label>Crop Fields</label><input class="crop-fields" type="number" min="0" step="1" placeholder="0" inputmode="numeric" /></div>
       <div class="field"><label>Crop Year</label><input class="crop-year" type="number" min="1900" max="2200" step="1" placeholder="2026" /></div>
+      <div class="field"><label>No Till</label><label class="check-tile"><input class="no-till" type="checkbox" /><span>No Till</span></label></div>
+      <div class="field no-till-drill-wrap hidden"><label>No-Till Drill Used?</label><select class="no-till-drill"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+      <div class="field"><label>NON GMO</label><label class="check-tile"><input class="non-gmo" type="checkbox" /><span>NON GMO</span></label></div>
+      <div class="field"><label>Perennial Cropping / Orchard</label><label class="check-tile"><input class="is-perennial" type="checkbox" /><span>Perennial / Orchard</span></label></div>
       <button class="btn danger remove-crop" type="button">Remove Crop</button>
     </div>
     <div class="crop-hidden-metrics" aria-hidden="true">
@@ -287,8 +298,31 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
       <span class="crop-interpret">—</span>
       <span class="crop-lri-fill"></span>
     </div>
+    <div class="designated-traffic-panel">
+      <div class="perennial-title"><div><h3>Designated Traffic Zones</h3><div class="help">Document whether field traffic is limited to designated lanes or zones for this crop.</div></div></div>
+      <div class="input-grid">
+        <div class="field"><label>Designated Traffic Zones?</label><select class="designated-traffic"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        <div class="field full traffic-why-wrap hidden"><label>Why are designated traffic zones not used?</label><textarea class="designated-traffic-why" placeholder="Explain why designated traffic zones are not used for this crop or field."></textarea></div>
+      </div>
+    </div>
+    <div class="perennial-panel hidden">
+      <div class="perennial-title"><div><h3>Perennial Cropping / Orchard Data</h3><div class="help">These fields match the perennial-specific Crop Planner questions in the SCI Farm Plan Document Builder.</div></div></div>
+      <div class="input-grid">
+        <div class="field"><label>Perennial System Type</label><select class="perennial-system-type"><option value="">Select</option><option>Perennial field crop</option><option>Orchard</option><option>Vineyard</option><option>Agroforestry / silvopasture</option><option>Other</option></select></div>
+        <div class="field other-system-wrap hidden"><label>Other System Type</label><input class="perennial-system-other" placeholder="Describe system" /></div>
+        <div class="field"><label>Establishment Year</label><input class="perennial-establishment-year" type="number" min="1800" max="2200" step="1" placeholder="Year planted" /></div>
+        <div class="field"><label>Middle-Row / Inter-Row Vegetation</label><select class="perennial-middle-row"><option value="">Select</option><option>Growing season only</option><option>Maintained year-round</option><option>Not maintained</option><option>N/A — no middle rows</option></select></div>
+        <div class="field"><label>Grasses, Forbs, and Legumes Included</label><select class="perennial-functional-mix"><option value="">Select</option><option>Yes</option><option>No</option><option>Planned</option><option>N/A</option></select></div>
+        <div class="field"><label>Mulch Used?</label><select class="perennial-mulch-used"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        <div class="field"><label>Current Bare Soil in Middle Rows (%)</label><input class="perennial-bare-soil" type="number" min="0" max="100" step="0.1" placeholder="0–100" /></div>
+        <div class="field"><label>Designated Traffic Areas</label><select class="perennial-traffic"><option value="">Select</option><option>Yes</option><option>No</option><option>Planned</option><option>N/A</option></select></div>
+        <div class="field full"><label>Bare Soil Reduction / Soil Cover Plan</label><textarea class="perennial-cover-plan" placeholder="Describe living vegetation, mulch, hay, wood chips, crop residue, or other actions used to reduce bare soil."></textarea></div>
+        <div class="field full"><label>Tillage Reduction Plan</label><textarea class="perennial-tillage-plan" placeholder="Describe how tillage intensity will be reduced or avoided in this perennial system."></textarea></div>
+        <div class="field full"><label>Perennial System Notes</label><textarea class="perennial-notes" placeholder="Optional context, climate constraints, or special considerations."></textarea></div>
+      </div>
+    </div>
     <div class="optional-bar optional-add-actions">
-      <div class="help">Cash crop is always included. Pre-season and post-harvest cover crops are optional in QA/QC and only counted when entered. Opening one section collapses the previous entry to save space.</div>
+      <div class="help planner-help">For annual crops, the cash crop is included. When marked Perennial / Orchard, the Cash Crop entry is removed while Mulch Used remains in the perennial section. Pre-season and post-harvest cover crops are optional in QA/QC and only counted when entered. Opening one section collapses the previous entry to save space.</div>
       <button class="btn ghost add-pre" type="button">+ Add Pre-Season Cover Crop</button>
       <button class="btn ghost add-post" type="button">+ Add Post-Harvest Cover Crop</button>
     </div>
@@ -313,9 +347,16 @@ input:focus, select:focus, textarea:focus { border-color: var(--sci-clay); box-s
         <div class="field"><label>Variety</label><input class="variety" placeholder="Optional" /></div>
         <div class="field"><label>Seeding Rate lb/ac</label><input class="seeding-rate" type="number" min="0" step="0.01" placeholder="0" /></div>
         <div class="field date-field"><label>Planting Date</label><input class="planting-date" type="date" /></div>
-        <div class="field date-field"><label>Harvest / Termination Date</label><input class="harvest-date" type="date" /></div>
+        <div class="field"><label>Days Until Emergence</label><input class="days-until-emergence" type="number" min="0" step="1" placeholder="0" /></div>
+        <div class="field"><label>DCC — Days from Emergence to Full Soil Cover</label><input class="dcc" type="number" min="0" step="1" placeholder="0" /></div>
+        <div class="field"><label>Calculated Emergence Date</label><input class="emergence-date" readonly placeholder="Enter planting date" /></div>
+        <div class="field"><label>Calculated Full Soil Cover Date</label><input class="full-cover-date" readonly placeholder="Enter DCC" /></div>
+        <div class="field date-field"><label>Harvest / Termination or Maturity Date</label><input class="harvest-date" type="date" /></div>
         <div class="field"><label>Termination Style</label><select class="termination-style"><option value="">Select if cover crop</option><option>Herbicide</option><option>Frost Kill</option><option>Winter Kill</option><option>Roller Crimp</option><option>Tillage</option><option>Harvest</option><option>Grazing</option><option>Other</option></select></div>
-        <div class="field"><label>LRI</label><input class="entry-lri" readonly value="0.00" /></div>
+        <div class="field"><label>Mulch Used?</label><select class="mulch-used"><option value="">Select</option><option>Yes</option><option>No</option></select></div>
+        <div class="field"><label>Covered Days</label><input class="covered-days" readonly value="0" /></div>
+        <div class="field"><label>Living-Root Days</label><input class="living-root-days" readonly value="0" /></div>
+        <div class="field"><label>LRI (%)</label><input class="entry-lri" readonly value="0.00" /></div>
         <div class="field full"><label>Notes</label><textarea class="notes" placeholder="Optional notes"></textarea></div>
       </div>
     </div>
@@ -345,14 +386,22 @@ function postHeight() {
   try { parent.postMessage({ type: 'sci-tool-height', height: h }, '*'); } catch(e) {}
 }
 
+function addDaysIso(dateText, days) {
+  if (!dateText) return '';
+  const d = new Date(dateText + 'T00:00:00Z');
+  if (Number.isNaN(d.getTime())) return '';
+  d.setUTCDate(d.getUTCDate() + Math.max(0, num(days)));
+  return d.toISOString().slice(0, 10);
+}
 function daysBetween(start, end) {
   if (!start || !end) return 0;
-  const s = new Date(start + 'T00:00:00');
-  const e = new Date(end + 'T00:00:00');
-  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime()) || e < s) return 0;
-  return Math.round((e - s) / 86400000);
+  const s = new Date(start + 'T00:00:00Z');
+  let e = new Date(end + 'T00:00:00Z');
+  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 0;
+  if (e < s) e = new Date(Date.UTC(e.getUTCFullYear() + 1, e.getUTCMonth(), e.getUTCDate()));
+  return Math.max(0, Math.round((e - s) / 86400000));
 }
-function calcLri(start, end) { return daysBetween(start, end) / 365; }
+function calcLri(start, end) { return (daysBetween(start, end) / 365) * 100; }
 function interpretLri(lri) {
   if (lri <= 0) return '—';
   if (lri < 0.25) return 'Short-duration cover';
@@ -367,12 +416,12 @@ function interpretLong(lri) {
   if (lri < 0.75) return 'Strong cover-crop or long-season crop window; roots active about 6–9 months. Good for organic-matter building and water holding.';
   return 'Near-continuous or multi-species cover-crop system; roots active 9+ months. Very high living-root time.';
 }
-function livingRootPct(lri) { return Math.max(0, lri) * 100; }
+function livingRootPct(lri) { return Math.max(0, lri); }
 function farmWideCropLivingRootPct(cropLri, cropAcres, totalAcres) {
-  return totalAcres > 0 ? (Math.max(0, cropLri) * Math.max(0, cropAcres) / totalAcres) * 100 : 0;
+  return totalAcres > 0 ? (Math.max(0, cropLri) * Math.max(0, cropAcres) / totalAcres) : 0;
 }
 function entryStarted(entry) {
-  return ['.entry-crop','.variety','.seeding-rate','.planting-date','.harvest-date','.termination-style','.notes'].some(sel => ($(sel, entry)?.value || '').trim());
+  return ['.entry-crop','.variety','.seeding-rate','.planting-date','.days-until-emergence','.dcc','.harvest-date','.termination-style','.mulch-used','.notes'].some(sel => ($(sel, entry)?.value || '').trim());
 }
 function entryComplete(entry) {
   const type = entry.dataset.entryType;
@@ -388,13 +437,12 @@ function entryMissingMessage(entry) {
   if (!$('.entry-crop', entry).value.trim()) missing.push('Crop/Cover Crop');
   if (!$('.planting-date', entry).value) missing.push('Planting Date');
   if (!$('.harvest-date', entry).value) missing.push('Harvest/Termination Date');
-  if ($('.planting-date', entry).value && $('.harvest-date', entry).value && new Date($('.harvest-date', entry).value) < new Date($('.planting-date', entry).value)) missing.push('Harvest/Termination must be after Planting Date');
   return missing.join(', ');
 }
 function labelForType(type) {
   if (type === 'pre') return 'Pre-Season Cover Crop (Optional)';
-  if (type === 'post') return 'Post Harvest Cover Crop (Optional)';
-  return 'Cash Crop';
+  if (type === 'post') return 'Post-Harvest Cover Crop (Optional)';
+  return 'Cash Crop (Required)';
 }
 function createEntry(type = 'cash') {
   const entry = $('#entryTemplate').content.firstElementChild.cloneNode(true);
@@ -415,13 +463,20 @@ function createEntry(type = 'cash') {
 }
 function refreshEntry(entry) {
   const crop = $('.entry-crop', entry).value.trim() || labelForType(entry.dataset.entryType);
-  const start = $('.planting-date', entry).value;
-  const end = $('.harvest-date', entry).value;
-  const days = daysBetween(start, end);
-  const lri = calcLri(start, end);
-  $('.entry-lri', entry).value = fmt(lri, 3);
+  const planting = $('.planting-date', entry).value;
+  const emergence = addDaysIso(planting, $('.days-until-emergence', entry).value);
+  const fullCover = addDaysIso(emergence, $('.dcc', entry).value);
+  const harvest = $('.harvest-date', entry).value;
+  const livingDays = daysBetween(emergence, harvest);
+  const coveredDays = daysBetween(fullCover, harvest);
+  const lriPct = (livingDays / 365) * 100;
+  $('.emergence-date', entry).value = emergence;
+  $('.full-cover-date', entry).value = fullCover;
+  $('.living-root-days', entry).value = String(livingDays);
+  $('.covered-days', entry).value = String(coveredDays);
+  $('.entry-lri', entry).value = fmt(lriPct, 2);
   $('.entry-summary-title', entry).textContent = crop;
-  $('.entry-summary-sub', entry).textContent = `${labelForType(entry.dataset.entryType)} · ${start || 'No start date'} to ${end || 'No end date'} · ${days} days · LRI ${fmt(lri, 3)}`;
+  $('.entry-summary-sub', entry).textContent = `${labelForType(entry.dataset.entryType)} · ${planting || 'No planting date'} to ${harvest || 'No harvest date'} · ${livingDays} living-root days · LRI ${fmt(lriPct, 2)}%`;
 }
 function openEntry(entry) {
   const crop = entry.closest('.crop-card');
@@ -447,6 +502,23 @@ function ensureEntry(crop, type) {
     else entries.appendChild(entry);
   }
   openEntry(entry);
+  calculateAll();
+  postHeight();
+}
+
+
+function syncPerennialMode(crop) {
+  const enabled = !!$('.is-perennial', crop)?.checked;
+  $('.perennial-panel', crop)?.classList.toggle('hidden', !enabled);
+  let cash = $('.plan-entry[data-entry-type="cash"]', crop);
+  if (enabled && cash) cash.remove();
+  if (!enabled && !cash) {
+    cash = createEntry('cash');
+    $('.entries', crop).appendChild(cash);
+    openEntry(cash);
+  }
+  const systemType = $('.perennial-system-type', crop);
+  $('.other-system-wrap', crop)?.classList.toggle('hidden', systemType?.value !== 'Other');
   calculateAll();
   postHeight();
 }
@@ -483,7 +555,8 @@ function validateJourney() {
     cropAcresTotal += acres;
     cropFieldsTotal += fields;
     const cash = $('.plan-entry[data-entry-type="cash"]', crop);
-    if (!entryComplete(cash)) return { ok:false, message:`Finish the cash crop window for ${name}. Missing: ${entryMissingMessage(cash)}.`, el:cash };
+    const isPerennial = $('.is-perennial', crop)?.checked;
+    if (!isPerennial && (!cash || !entryComplete(cash))) return { ok:false, message:`Finish the cash crop window for ${name}. Missing: ${cash ? entryMissingMessage(cash) : 'Cash Crop entry'}.`, el:cash || crop };
     for (const entry of $$('.plan-entry', crop)) {
       if (entry.dataset.entryType !== 'cash' && entryStarted(entry) && !entryComplete(entry)) {
         return { ok:false, message:`Optional cover crop started for ${name}. Finish it or remove it before export. Missing: ${entryMissingMessage(entry)}.`, el:entry };
@@ -550,6 +623,17 @@ function addCrop(name = '', acres = '') {
   $('.crop-acres', crop).value = acres;
   $('.crop-year', crop).value = $('#planningYear').value || todayYear;
   $('.entries', crop).appendChild(createEntry('cash'));
+  const syncCropSetup = () => {
+    $('.crop-type-other-wrap', crop).classList.toggle('hidden', $('.crop-type', crop).value !== 'Other');
+    $('.no-till-drill-wrap', crop).classList.toggle('hidden', !$('.no-till', crop).checked);
+    $('.traffic-why-wrap', crop).classList.toggle('hidden', $('.designated-traffic', crop).value !== 'No');
+    calculateAll(); postHeight();
+  };
+  $('.crop-type', crop).addEventListener('change', syncCropSetup);
+  $('.no-till', crop).addEventListener('change', syncCropSetup);
+  $('.designated-traffic', crop).addEventListener('change', syncCropSetup);
+  $('.is-perennial', crop).addEventListener('change', () => syncPerennialMode(crop));
+  $('.perennial-system-type', crop).addEventListener('change', () => syncPerennialMode(crop));
   $('.add-pre', crop).addEventListener('click', () => ensureEntry(crop, 'pre'));
   $('.add-post', crop).addEventListener('click', () => ensureEntry(crop, 'post'));
   $('.remove-crop', crop).addEventListener('click', () => {
@@ -602,13 +686,19 @@ function getEntryData(crop, entry) {
   const variety = $('.variety', entry).value.trim();
   const seedingRate = num($('.seeding-rate', entry).value);
   const plantingDate = $('.planting-date', entry).value;
+  const daysUntilEmergence = num($('.days-until-emergence', entry).value);
+  const dcc = num($('.dcc', entry).value);
+  const emergenceDate = addDaysIso(plantingDate, daysUntilEmergence);
+  const fullSoilCoverDate = addDaysIso(emergenceDate, dcc);
   const harvestDate = $('.harvest-date', entry).value;
   const terminationStyle = $('.termination-style', entry).value;
-  const rootDays = daysBetween(plantingDate, harvestDate);
-  const lri = rootDays / 365;
+  const mulchUsed = $('.mulch-used', entry)?.value || '';
+  const rootDays = daysBetween(emergenceDate, harvestDate);
+  const coveredDays = daysBetween(fullSoilCoverDate, harvestDate);
+  const lri = (rootDays / 365) * 100;
   const notes = $('.notes', entry).value.trim();
   const hasEntry = type === 'cash' || entryStarted(entry);
-  return { type, category: labelForType(type), cropName, cropAcres, cropFields, plantingYear, entryCrop, variety, seedingRate, plantingDate, harvestDate, terminationStyle, rootDays, lri, notes, hasEntry };
+  return { type, category: labelForType(type), cropName, cropAcres, cropFields, plantingYear, entryCrop, variety, seedingRate, plantingDate, daysUntilEmergence, dcc, emergenceDate, fullSoilCoverDate, harvestDate, terminationStyle, mulchUsed, rootDays, coveredDays, lri, notes, hasEntry };
 }
 function calculateAll() {
   const totalAcres = num($('#totalAcres').value);
@@ -640,7 +730,7 @@ function calculateAll() {
     $('.crop-root-days', crop).textContent = String(rootDays);
     $('.crop-entries', crop).textContent = String(entries);
     $('.crop-interpret', crop).textContent = interpretLri(cropLri);
-    $('.crop-lri-fill', crop).style.width = Math.min(100, Math.max(0, cropLri * 100)) + '%';
+    $('.crop-lri-fill', crop).style.width = Math.min(100, Math.max(0, cropLri)) + '%';
   });
   const remaining = totalAcres - cropAcresTotal;
   const remainingFields = totalFields - cropFieldsTotal;
@@ -720,6 +810,8 @@ function renderSummary() {
     const entries = $('.crop-entries', crop).textContent;
     const cropLivingRootPct = livingRootPct(lri);
     const farmWideCropPct = farmWideCropLivingRootPct(lri, acres, totalAcres);
+    const isPerennial = !!$('.is-perennial', crop)?.checked;
+    const perennialDetails = isPerennial ? `<div class="summary-empty"><strong>Perennial / Orchard:</strong> ${htmlEscape($('.perennial-system-type', crop)?.value || 'Not specified')} · Establishment year ${htmlEscape($('.perennial-establishment-year', crop)?.value || '—')} · Mulch ${htmlEscape($('.perennial-mulch-used', crop)?.value || '—')}<br>${htmlEscape($('.perennial-notes', crop)?.value || '')}</div>` : '';
     let rows = '';
     $$('.plan-entry', crop).forEach(entry => {
       const data = getEntryData(crop, entry);
@@ -731,10 +823,14 @@ function renderSummary() {
         <td>${htmlEscape(data.variety || '—')}</td>
         <td>${data.seedingRate ? fmt(data.seedingRate, 2) : '—'}</td>
         <td>${htmlEscape(data.plantingDate || '—')}</td>
+        <td>${htmlEscape(data.emergenceDate || '—')}</td>
+        <td>${htmlEscape(data.fullSoilCoverDate || '—')}</td>
         <td>${htmlEscape(data.harvestDate || '—')}</td>
         <td>${htmlEscape(data.terminationStyle || '—')}</td>
+        <td>${htmlEscape(data.mulchUsed || '—')}</td>
         <td>${data.rootDays}</td>
-        <td>${fmt(data.lri, 3)}</td>
+        <td>${data.coveredDays}</td>
+        <td>${fmt(data.lri, 2)}%</td>
       </tr>`;
     });
     html += `<div class="crop-summary-card">
@@ -745,8 +841,8 @@ function renderSummary() {
         <div class="cs-stat"><div class="csv">${fmt(farmWideCropPct, 1)}%</div><div class="csl">Farm-Wide Per Crop Living Root %</div></div>
         <div class="cs-stat"><div class="csv">${rootDays}</div><div class="csl">Living Root Days</div></div>
       </div>
-      <div class="summary-table-wrap"><table class="summary-table"><thead><tr><th>Window</th><th>Year</th><th>Crop</th><th>Variety</th><th>Seeding Rate lb/ac</th><th>Planting Date</th><th>Harvest/Termination</th><th>Termination Style</th><th>Days</th><th>LRI</th></tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="summary-empty">${htmlEscape(interpretLong(lri))}</div>
+      <div class="summary-table-wrap"><table class="summary-table"><thead><tr><th>Window</th><th>Year</th><th>Crop</th><th>Variety</th><th>Seeding Rate lb/ac</th><th>Planting Date</th><th>Emergence</th><th>Full Cover</th><th>Harvest/Termination</th><th>Termination Style</th><th>Mulch Used?</th><th>Living-Root Days</th><th>Covered Days</th><th>LRI %</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="summary-empty">${htmlEscape(interpretLong(lri))}</div>${perennialDetails}
     </div>`;
   });
   $('#summaryContent').innerHTML = html;
@@ -756,65 +852,57 @@ function exportCsv() {
   calculateAll();
   const check = validateJourney();
   if (!check.ok) { showSummaryQA(check.message); goTo('crops'); showCropQA(check.message); if (check.el) check.el.scrollIntoView({behavior:'smooth', block:'center'}); return; }
-  showSummaryQA('CSV downloaded.');
   const farmName = $('#farmName').value.trim();
-  const preparedBy = $('#preparedBy').value.trim();
   const planningYear = $('#planningYear').value;
-  const totalAcresNum = num($('#totalAcres').value);
-  const totalFieldsNum = num($('#totalFields').value);
-  const cropAcresEntered = num($('#sumCropAcres').textContent);
-  const cropFieldsEntered = num($('#sumCropFields') ? $('#sumCropFields').textContent : 0);
-  const remainingAcres = totalAcresNum - cropAcresEntered;
-  const remainingFields = totalFieldsNum - cropFieldsEntered;
-  const weightedLri = num($('#farmWeightedLri').textContent);
-  const weightedLivingRootPct = livingRootPct(weightedLri);
-  const avgLri = num($('#farmAvgLri').textContent);
-  const rows = [
-    ['Crop Plan LRI Summary'],
-    ['Farm Name', farmName],
-    ['Prepared By', preparedBy],
-    ['Planning Year', planningYear],
-    ['Total Farm Acres', $('#totalAcres').value],
-    ['Total Fields', $('#totalFields').value],
-    ['Crop Acres Entered', fmt(cropAcresEntered, 2)],
-    ['Crop Fields Entered', fmt(cropFieldsEntered, 0)],
-    ['Remaining Acres', fmt(remainingAcres, 2)],
-    ['Remaining Fields', fmt(remainingFields, 0)],
-    ['Farm Weighted Living Root Index', fmt(weightedLri, 3)],
-    ['Farm Weighted Living Root %', fmt(weightedLivingRootPct, 1) + '%'],
-    ['Farm Average Crop LRI', fmt(avgLri, 3)],
-    ['Total Living Root Days', getCropCards().reduce((sum, crop) => sum + num($('.crop-root-days', crop).textContent), 0)],
-    ['Total Planning Entries', getCropCards().reduce((sum, crop) => sum + num($('.crop-entries', crop).textContent), 0)],
-    ['Farm LRI Interpretation', interpretLong(weightedLri)],
-    [],
-    ['Farm Name','Prepared By','Planning Year','Total Fields','Input Category','Crop Page Name','Crop Acres','Crop Fields','Planting Year','Crop','Variety','Seeding Rate lb/ac','Planting Date','Harvest/Termination Date','Termination Style','Living Root Days','LRI','Total Crop LRI','Annual Crop Living Root %','Crop LRI Interpretation','Notes']
+  const headers = [
+    'farmName','farmPlanningYear','section','cropName','cropType','acres','fields','fieldBoundaries','fieldBoundaryCount',
+    'designatedTrafficZones','designatedTrafficZonesWhyNo','noTill','noTillDrillUsed','nonGmo','perennialOrOrchard',
+    'perennialSystemType','perennialSystemTypeOther','perennialEstablishmentYear','perennialMiddleRowVegetation',
+    'perennialFunctionalMix','perennialMulchUsed','perennialBareSoilPct','perennialBareSoilReductionPlan',
+    'perennialTillageReductionPlan','perennialDesignatedTrafficAreas','perennialNotes','title','plantingYear','crop','variety',
+    'seedingRate','plantingDate','daysUntilEmergence','dcc','emergenceDate','fullSoilCoverDate','livingRootDays','coveredDays',
+    'harvestDate','terminationStyle','mulchUsed','notes','status'
   ];
+  const rows = [headers];
   $$('.crop-card').forEach((crop, idx) => {
     const cropName = $('.crop-name', crop).value.trim() || `Crop ${idx + 1}`;
-    const cropAcres = num($('.crop-acres', crop).value);
-    const cropFields = num($('.crop-fields', crop).value);
-    const totalCropLri = num($('.crop-lri-total', crop).textContent);
-    const cropLivingRootPct = livingRootPct(totalCropLri);
-    const cropInterpret = interpretLong(totalCropLri);
+    const cropType = $('.crop-type', crop).value === 'Other' ? ($('.crop-type-other', crop).value.trim() || 'Other') : $('.crop-type', crop).value;
+    const base = {
+      farmName, farmPlanningYear: planningYear, section: 'crop_planner', cropName, cropType,
+      acres: $('.crop-acres', crop).value, fields: $('.crop-fields', crop).value,
+      fieldBoundaries: '', fieldBoundaryCount: '',
+      designatedTrafficZones: $('.designated-traffic', crop).value,
+      designatedTrafficZonesWhyNo: $('.designated-traffic-why', crop).value.trim(),
+      noTill: $('.no-till', crop).checked ? 'Yes' : 'No', noTillDrillUsed: $('.no-till-drill', crop).value,
+      nonGmo: $('.non-gmo', crop).checked ? 'Yes' : 'No', perennialOrOrchard: $('.is-perennial', crop).checked ? 'Yes' : 'No',
+      perennialSystemType: $('.perennial-system-type', crop).value,
+      perennialSystemTypeOther: $('.perennial-system-other', crop).value.trim(),
+      perennialEstablishmentYear: $('.perennial-establishment-year', crop).value,
+      perennialMiddleRowVegetation: $('.perennial-middle-row', crop).value,
+      perennialFunctionalMix: $('.perennial-functional-mix', crop).value,
+      perennialMulchUsed: $('.perennial-mulch-used', crop).value,
+      perennialBareSoilPct: $('.perennial-bare-soil', crop).value,
+      perennialBareSoilReductionPlan: $('.perennial-cover-plan', crop).value.trim(),
+      perennialTillageReductionPlan: $('.perennial-tillage-plan', crop).value.trim(),
+      perennialDesignatedTrafficAreas: $('.perennial-traffic', crop).value,
+      perennialNotes: $('.perennial-notes', crop).value.trim()
+    };
     $$('.plan-entry', crop).forEach(entry => {
-      const data = getEntryData(crop, entry);
-      if (!data.hasEntry) return;
-      rows.push([farmName, preparedBy, planningYear, totalFieldsNum, data.category, cropName, cropAcres, cropFields, data.plantingYear, data.entryCrop, data.variety, data.seedingRate, data.plantingDate, data.harvestDate, data.terminationStyle, data.rootDays, fmt(data.lri, 3), fmt(totalCropLri, 3), fmt(cropLivingRootPct, 1) + '%', cropInterpret, data.notes]);
+      const d = getEntryData(crop, entry); if (!d.hasEntry) return;
+      const row = {...base, title:d.category, plantingYear:d.plantingYear, crop:d.entryCrop, variety:d.variety,
+        seedingRate:d.seedingRate || '', plantingDate:d.plantingDate, daysUntilEmergence:d.daysUntilEmergence || '', dcc:d.dcc || '',
+        emergenceDate:d.emergenceDate, fullSoilCoverDate:d.fullSoilCoverDate, livingRootDays:d.rootDays, coveredDays:d.coveredDays,
+        harvestDate:d.harvestDate, terminationStyle:d.terminationStyle, mulchUsed:d.mulchUsed, notes:d.notes, status:'Complete'};
+      rows.push(headers.map(h => row[h] ?? ''));
     });
   });
-  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
+  const csv = '\ufeff' + rows.map(row => row.map(csvEscape).join(',')).join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const safeName = (farmName || 'crop_planner_lri').replace(/[^a-z0-9-_]+/gi, '_').replace(/^_+|_+$/g, '');
-  a.href = url;
-  a.download = `${safeName ? safeName + '_' : ''}Crop_Plan_LRI.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  const safeName = (farmName || 'Unnamed_Farm').replace(/[^a-z0-9-_]+/gi, '_').replace(/^_+|_+$/g, '');
+  a.href = url; a.download = `${safeName}_${planningYear}_01_crop_planner.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  showSummaryQA('Builder-compatible Crop Planner CSV downloaded.');
 }
-
 $('#cropCount').addEventListener('change', syncCropCardsToCount);
 $('#cropCount').addEventListener('input', () => { if ($('#cropCount').value.trim()) syncCropCardsToCount(); });
 $('#prevCropBtn').addEventListener('click', () => setActiveCrop(activeCropIndex - 1));
